@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { TaskTopic, Assessment } from '../api';
-import type { GetPlayerTopicsResponse, PlayerTaskTopic } from '../api';
-import { api } from '../services';
+import type { PlayerTaskTopic } from '../api';
+import { gqlSdk } from '../graphql/client';
 import TopicIcon from './TopicIcons';
 import { useLocalization } from '../hooks/useLocalization';
 import { ExperienceProgressBar } from './ui/experience-progress-bar';
@@ -13,6 +13,7 @@ type TopicsSectionProps = {
 };
 
 const TopicsSection: React.FC<TopicsSectionProps> = ({ isAuthenticated, onSave }) => {
+  const fetchInitiatedRef = useRef(false);
   const [allTopics] = useState<TaskTopic[]>(Object.values(TaskTopic));
   const [playerTopics, setPlayerTopics] = useState<PlayerTaskTopic[]>([]);
   const [originalTopics, setOriginalTopics] = useState<PlayerTaskTopic[]>([]);
@@ -22,7 +23,6 @@ const TopicsSection: React.FC<TopicsSectionProps> = ({ isAuthenticated, onSave }
   const { t } = useLocalization();
   const backdropBlur = getOptimizedBlur('20px', '4px');
 
-  // Определяем заблокированные топики
   const getIsDisabled = (topic: TaskTopic): boolean => {
     const disabledTopics = [
       TaskTopic.CYBERSPORT,
@@ -33,32 +33,34 @@ const TopicsSection: React.FC<TopicsSectionProps> = ({ isAuthenticated, onSave }
     return disabledTopics.includes(topic);
   };
 
-  // Загружаем топики пользователя только при монтировании компонента и если авторизованы
+  const applyTopics = useCallback((rawTopics: PlayerTaskTopic[]) => {
+    const topicsWithDisabled = rawTopics.map(pt => ({
+      ...pt,
+      isDisabled: pt.isDisabled ?? getIsDisabled(pt.taskTopic),
+    }));
+    setPlayerTopics(topicsWithDisabled);
+    setOriginalTopics(topicsWithDisabled);
+    setFirstTime(topicsWithDisabled.filter(pt => pt.isActive).length === 0);
+    setLoading(false);
+  }, []);
+
+  // Fetch topics on mount — fetchInitiatedRef prevents double-fetch from React.StrictMode
   useEffect(() => {
-    if (isAuthenticated) {
-      setLoading(true);
-      api.getUserTopics()
-        .then((res: GetPlayerTopicsResponse) => {
-          // Устанавливаем isDisabled для заблокированных топиков
-          const topicsWithDisabled = res.playerTaskTopics.map(pt => ({
-            ...pt,
-            isDisabled: pt.isDisabled ?? getIsDisabled(pt.taskTopic)
-          }));
-          setPlayerTopics(topicsWithDisabled);
-          // Сохраняем все топики как исходные для сравнения (не только активные)
-          setOriginalTopics(topicsWithDisabled);
-          // firstTime определяется по пустоте списка активных топиков
-          const activeTopics = topicsWithDisabled.filter(pt => pt.isActive);
-          setFirstTime(activeTopics.length === 0);
-          setLoading(false);
-        })
-        .catch((error: any) => {
-          console.error('Error getting player topics:', error);
-          setLoading(false);
-        });
-    } else {
+    if (!isAuthenticated) {
+      fetchInitiatedRef.current = false;
       setLoading(false);
+      return;
     }
+    if (fetchInitiatedRef.current) return;
+    fetchInitiatedRef.current = true;
+
+    gqlSdk.GetPlayerTopics()
+      .then(({ me }) => applyTopics(me.player.taskTopics.topics as unknown as PlayerTaskTopic[]))
+      .catch((err) => {
+        console.error('[TopicsSection] failed to load topics:', err);
+        setLoading(false);
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
 
   // Мемоизируем проверку изменений
@@ -123,47 +125,52 @@ const TopicsSection: React.FC<TopicsSectionProps> = ({ isAuthenticated, onSave }
   const handleSave = useCallback(async () => {
     setSaving(true);
 
-    // Отправляем только измененные топики (где изменился isActive)
-    const changedTopics = playerTopics
-      .filter(pt => {
-        const originalTopic = originalTopics.find(opt => opt.taskTopic === pt.taskTopic);
-        // Если топика не было в исходных данных, но он активен - это изменение
-        if (!originalTopic) {
-          return pt.isActive;
+    try {
+      const changedTopics = playerTopics
+        .filter(pt => {
+          const originalTopic = originalTopics.find(opt => opt.taskTopic === pt.taskTopic);
+          if (!originalTopic) return pt.isActive;
+          return originalTopic.isActive !== pt.isActive;
+        })
+        .map(pt => ({
+          ...pt,
+          isDisabled: pt.isDisabled ?? getIsDisabled(pt.taskTopic),
+        }));
+
+      if (changedTopics.length > 0) {
+        await gqlSdk.SavePlayerTopics({
+          topics: changedTopics.map(pt => ({
+            id: pt.id,
+            isActive: pt.isActive,
+            taskTopic: pt.taskTopic as any,
+            version: pt.version,
+          })),
+        });
+      }
+
+      if (firstTime) {
+        try {
+          await gqlSdk.GenerateTasks();
+        } catch (genErr) {
+          // Backend may fail on first generation — topics are already saved,
+          // tasks will be generated asynchronously by the server.
+          console.warn('[TopicsSection] GenerateTasks failed (non-fatal):', genErr);
         }
-        // Если топик был в исходных данных, проверяем, изменился ли isActive
-        return originalTopic.isActive !== pt.isActive;
-      })
-      .map(pt => ({
-        ...pt,
-        isDisabled: pt.isDisabled ?? getIsDisabled(pt.taskTopic)
-      }));
+      }
 
-    if (changedTopics.length > 0) {
-      await api.saveUserTopics(changedTopics);
+      if (firstTime) {
+        onSave?.();
+      }
+
+      // Refresh topics local state after save
+      const { me } = await gqlSdk.GetPlayerTopics();
+      applyTopics(me.player.taskTopics.topics as unknown as PlayerTaskTopic[]);
+    } catch (err) {
+      console.error('[TopicsSection] Save failed:', err);
+    } finally {
+      setSaving(false);
     }
-
-    if (firstTime) {
-      await api.generateTasks();
-    }
-
-    setSaving(false);
-    
-    if (firstTime) {
-      // После сохранения при первом запуске переключаемся на задачи
-      onSave?.();
-    }
-
-    const updatedTopics = await api.getUserTopics();
-    // Устанавливаем isDisabled для заблокированных топиков при загрузке
-    const topicsWithDisabled = (updatedTopics.playerTaskTopics || []).map(pt => ({
-      ...pt,
-      isDisabled: pt.isDisabled ?? getIsDisabled(pt.taskTopic)
-    }));
-    setPlayerTopics(topicsWithDisabled);
-    // Сохраняем все топики как исходные для сравнения (не только активные)
-    setOriginalTopics(topicsWithDisabled);
-  }, [firstTime, onSave, playerTopics, originalTopics]);
+  }, [firstTime, onSave, playerTopics, originalTopics, applyTopics]);
 
   const topicColorSchemes = useMemo(() => ({
       PHYSICAL_ACTIVITY: {

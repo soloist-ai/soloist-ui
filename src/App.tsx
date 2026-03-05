@@ -30,7 +30,7 @@ import {auth} from './auth';
 import ConfirmDialog from './components/ConfirmDialog';
 import {useUiUpdate} from './hooks/useUiUpdate';
 import {useLocalization} from './hooks/useLocalization';
-import {UserAdditionalInfoProvider} from './contexts/UserAdditionalInfoContext';
+import {AppDataProvider} from './contexts/AppDataContext';
 import {StreakOverlayProvider} from './contexts/StreakOverlayContext';
 import TopBar from './components/TopBar';
 import { DayStreakNavigator } from './components/DayStreakNavigator';
@@ -114,8 +114,8 @@ function AppRoutes() {
     isAuthLoading,
     authPromise
   } = useAuth();
-  // Один запрос getAdditionalInfo после авторизации: локаль + данные для UserAdditionalInfoProvider
-  const { isLocaleLoading, localeLoaded, additionalInfoData } = useLocaleSync(isAuthenticated);
+  // Single GetAppData bootstrap after auth: locale + all initial data for AppDataProvider
+  const { isLocaleLoading, localeLoaded, appData } = useLocaleSync(isAuthenticated);
 
   // Подключение к WebSocket после успешной авторизации
   useWebSocketNotifications({enabled: isAuthenticated, authPromise});
@@ -206,10 +206,10 @@ function AppRoutes() {
               {authError && !showNoTelegramError && (
                   <TelegramWidget type="auth-error" errorMessage={authError}/>
               )}
-              {!showNoTelegramError && !authError && (isAuthenticated ? additionalInfoData != null : true) && (
-                  <UserAdditionalInfoProvider
+              {!showNoTelegramError && !authError && (isAuthenticated ? appData != null : true) && (
+                  <AppDataProvider
                     isAuthenticated={isAuthenticated}
-                    initialData={additionalInfoData ?? undefined}
+                    initialData={appData}
                   >
                     <DayStreakOverlayProvider>
                       <StreakOverlayProvider>
@@ -222,7 +222,7 @@ function AppRoutes() {
                         <DayStreakNavigator />
                       </StreakOverlayProvider>
                     </DayStreakOverlayProvider>
-                  </UserAdditionalInfoProvider>
+                  </AppDataProvider>
               )}
             </>
         )}

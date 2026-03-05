@@ -1,22 +1,25 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useLocalization } from '../hooks/useLocalization';
-import { api } from '../services';
+import { gqlSdk } from '../graphql/client';
 import Icon from './Icon';
 import { getMonthGenitive } from '../utils';
 import ScrollNavigationButtons from './ScrollNavigationButtons';
-import type { 
-  PlayerBalanceTransaction, 
-  SearchRequest,
-  SearchPlayerBalanceTransactionsResponse,
-  LocalizedField,
-  OrderMode
-} from '../api';
-import { OrderMode as OrderModeEnum } from '../api';
+import type { LocalizedField } from '../api';
+import type { BalanceTransaction, MoneyFieldsFragment, ResponsePagingFieldsFragment, OrderMode as GqlOrderMode } from '../graphql/generated';
+import { OrderMode } from '../graphql/generated';
 
-type TransactionItem = PlayerBalanceTransaction;
+export type GqlTransaction = Omit<BalanceTransaction, 'amount'> & { amount: MoneyFieldsFragment };
+
+interface InitialTransactionData {
+  transactions: GqlTransaction[];
+  paging: ResponsePagingFieldsFragment;
+}
+
+type TransactionItem = GqlTransaction;
 
 interface BankingTransactionsListProps {
-  onTransactionsLoad?: (transactions: PlayerBalanceTransaction[]) => void;
+  initialData?: InitialTransactionData;
+  onTransactionsLoad?: (transactions: GqlTransaction[]) => void;
   dateFilters?: { from: string; to: string };
   enumFilters?: {[field: string]: string[]};
   onFiltersUpdate?: (filters: LocalizedField[]) => void;
@@ -29,35 +32,40 @@ interface TransactionGroup {
 }
 
 const BankingTransactionsList: React.FC<BankingTransactionsListProps> = ({ 
+  initialData,
   onTransactionsLoad,
   dateFilters: propDateFilters,
   enumFilters: propEnumFilters,
   onFiltersUpdate
 }) => {
-  const [transactions, setTransactions] = useState<TransactionItem[]>([]);
+  const [transactions, setTransactions] = useState<GqlTransaction[]>(() => initialData?.transactions ?? []);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(true);
-  const [totalCount, setTotalCount] = useState<number | null>(null);
-  const [availableFilters, setAvailableFilters] = useState<LocalizedField[]>([]);
-  const [, setAvailableSorts] = useState<string[]>([]);
+  const [hasMore, setHasMore] = useState(() => initialData ? (initialData.paging.hasMore ?? true) : true);
+  const [totalCount, setTotalCount] = useState<number | null>(() => initialData?.paging.totalRowCount ?? null);
+  const [availableFilters] = useState<LocalizedField[]>([]);
   
   // Используем переданные фильтры или значения по умолчанию
   const dateFilters = useMemo(() => propDateFilters || { from: '', to: '' }, [propDateFilters]);
   const enumFilters = useMemo(() => propEnumFilters || {}, [propEnumFilters]);
-  const sorts: {field: string, mode: OrderMode}[] = useMemo(() => [{
+  const sorts: { field: string; mode: GqlOrderMode }[] = useMemo(() => [{
     field: 'createdAt',
-    mode: OrderModeEnum.DESC
+    mode: OrderMode.Desc,
   }], []);
   
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const currentPageRef = useRef(0);
-  const hasMoreRef = useRef(true);
+  const hasMoreRef = useRef(initialData ? (initialData.paging.hasMore ?? true) : true);
   const isLoadingRef = useRef(false);
   const loadTransactionsRef = useRef<typeof loadTransactions | undefined>(undefined);
-  const hasInitialLoadRef = useRef(false);
+  // Mount guard — true after first effect run so StrictMode remount doesn't refetch
+  const isMountHandledRef = useRef(false);
+  // Track last applied filter values to detect actual changes vs StrictMode re-runs
+  const prevDateFromRef = useRef(propDateFilters?.from ?? '');
+  const prevDateToRef = useRef(propDateFilters?.to ?? '');
+  const prevEnumFiltersRef = useRef(JSON.stringify(propEnumFilters ?? {}));
   
   const { t, currentLanguage } = useLocalization();
 
@@ -147,66 +155,46 @@ const BankingTransactionsList: React.FC<BankingTransactionsListProps> = ({
     setError(null);
 
     try {
-      const request: SearchRequest = {
+      const result = await gqlSdk.GetBalanceTransactions({
+        paging: { page, pageSize: 20 },
         options: {
           filter: {
             dateFilters: dateFilters.from && dateFilters.to ? [{
               field: 'createdAt',
-              range: {
-                from: dateFilters.from,
-                to: dateFilters.to
-              }
+              range: { from: dateFilters.from, to: dateFilters.to },
             }] : undefined,
-            enumFilters: Object.keys(enumFilters).length > 0 ? 
-              Object.entries(enumFilters).map(([field, values]) => ({
-                field,
-                values: values
-              })) : undefined
+            enumFilters: Object.keys(enumFilters).length > 0
+              ? Object.entries(enumFilters).map(([field, values]) => ({ field, values }))
+              : undefined,
           },
-          sorts: sorts.length > 0 ? sorts : undefined
-        }
-      };
+          sorts: sorts.length > 0 ? sorts : undefined,
+        },
+      });
 
-      const response: SearchPlayerBalanceTransactionsResponse = await api.searchPlayerBalanceTransactions(
-        request,
-        page,
-        20 // pageSize
-      );
-      
-      const newTransactions = response.transactions || [];
-      // Если получили 0 записей, значит больше нет данных, даже если API вернул hasMore: true
-      const hasMoreData = newTransactions.length > 0 && (response.paging?.hasMore || false);
-      
-      // Сохраняем общее количество элементов
-      if (response.paging?.totalRowCount !== undefined) {
-        setTotalCount(response.paging.totalRowCount);
+      const { transactions: newTransactions, paging } = result.me.player.balance.transactions;
+      const hasMoreData = newTransactions.length > 0 && (paging?.hasMore || false);
+
+      if (paging?.totalRowCount !== undefined) {
+        setTotalCount(paging.totalRowCount);
       }
-      
+
       if (reset) {
         setTransactions(newTransactions);
         setHasMore(hasMoreData);
         currentPageRef.current = 0;
         hasMoreRef.current = hasMoreData;
       } else {
-        // Проверяем, что мы действительно получили новые данные
         if (newTransactions.length > 0) {
           setTransactions(prev => [...prev, ...newTransactions]);
           setHasMore(hasMoreData);
           currentPageRef.current = page;
           hasMoreRef.current = hasMoreData;
         } else {
-          // Если новых данных нет, значит больше нет страниц
           setHasMore(false);
           hasMoreRef.current = false;
         }
       }
-      
-      // Обновляем фильтры и сортировки
-      if (response.options) {
-        setAvailableFilters(response.options.filters || []);
-        setAvailableSorts(response.options.sorts || []);
-      }
-      
+
       onTransactionsLoad?.(newTransactions);
       
     } catch (err) {
@@ -271,27 +259,41 @@ const BankingTransactionsList: React.FC<BankingTransactionsListProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasMore, loadingMore, transactions.length]);
 
-  // Загрузка при монтировании и изменении фильтров
+  // Load on mount and on filter changes.
+  // isMountHandledRef + prevFiltersRefs guard against React.StrictMode double-run.
   useEffect(() => {
-    // Сбрасываем состояние перед загрузкой
+    if (!isMountHandledRef.current) {
+      isMountHandledRef.current = true;
+      if (!initialData) {
+        // No initial data provided — fetch page 0 on mount
+        hasMoreRef.current = true;
+        currentPageRef.current = 0;
+        loadTransactionsRef.current?.(0, true);
+      }
+      return;
+    }
+
+    // Detect whether filters actually changed (vs StrictMode re-run with same values)
+    const currFrom = propDateFilters?.from ?? '';
+    const currTo = propDateFilters?.to ?? '';
+    const currEnum = JSON.stringify(propEnumFilters ?? {});
+    if (
+      currFrom === prevDateFromRef.current &&
+      currTo === prevDateToRef.current &&
+      currEnum === prevEnumFiltersRef.current
+    ) return;
+
+    prevDateFromRef.current = currFrom;
+    prevDateToRef.current = currTo;
+    prevEnumFiltersRef.current = currEnum;
+
     hasMoreRef.current = true;
     currentPageRef.current = 0;
-    
-    // Предотвращаем двойную загрузку при первом монтировании
-    if (!hasInitialLoadRef.current) {
-      hasInitialLoadRef.current = true;
-      // Загружаем сразу при монтировании, без задержки
-      if (!isLoadingRef.current) {
-        loadTransactionsRef.current?.(0, true);
-      }
-    } else {
-      // При изменении фильтров загружаем сразу
-      if (!isLoadingRef.current) {
-        loadTransactionsRef.current?.(0, true);
-      }
+    if (!isLoadingRef.current) {
+      loadTransactionsRef.current?.(0, true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dateFilters.from, dateFilters.to, JSON.stringify(enumFilters)]);
+  }, [dateFilters.from, dateFilters.to, JSON.stringify(propEnumFilters)]);
 
   // Мемоизируем группы транзакций для предотвращения лишних пересчетов
   const groups = useMemo(() => {
@@ -557,7 +559,7 @@ const BankingTransactionsList: React.FC<BankingTransactionsListProps> = ({
                   textShadow: '0 0 8px rgba(180, 220, 240, 0.4)'
                 }}
               >
-                {group.transactions.reduce((sum, t) => sum + (t.type === 'IN' ? t.amount.amount : -t.amount.amount), 0)} {group.transactions[0]?.amount.currencyCode || ''}
+                {group.transactions.reduce((sum, t) => sum + (t.type === 'IN' ? Number(t.amount.amount) : -Number(t.amount.amount)), 0)} {group.transactions[0]?.amount.currencyCode || ''}
               </span>
             </div>
           </div>

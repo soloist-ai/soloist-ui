@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ReactComponent as LogoIcon } from '../assets/icons/logo.svg';
+import LogoIcon from '../assets/icons/logo.svg?react';
 
 const MaintenanceScreen: React.FC = () => {
   const { t } = useTranslation();

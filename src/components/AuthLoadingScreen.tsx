@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { cn } from '../utils';
-import { ReactComponent as LogoIcon } from '../assets/icons/logo.svg';
+import LogoIcon from '../assets/icons/logo.svg?react';
 
 interface AuthLoadingScreenProps {
   isLoading: boolean;

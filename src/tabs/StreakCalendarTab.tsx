@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
-import { PlayerService } from '../api';
+import { gqlSdk } from '../graphql/client';
 import Icon from '../components/Icon';
 import { useLocalization } from '../hooks/useLocalization';
-import { useUserAdditionalInfo } from '../contexts/UserAdditionalInfoContext';
+import { useAppData } from '../contexts/AppDataContext';
 
 const WEEKDAY_ORDER: Array<'sunday' | 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday'> = [
   'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'
@@ -14,7 +14,8 @@ const MONTH_KEYS = ['january', 'february', 'march', 'april', 'may', 'june', 'jul
  * Прозрачный фон — орбы видны как на остальных табах.
  */
 const StreakCalendarTab: React.FC = () => {
-  const { dayStreak } = useUserAdditionalInfo();
+  const { me } = useAppData();
+  const dayStreak = me?.player?.dayStreak ?? null;
   const { t } = useLocalization();
   const now = useMemo(() => new Date(), []);
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
@@ -42,8 +43,8 @@ const StreakCalendarTab: React.FC = () => {
 
   useEffect(() => {
     setActiveDays([]);
-    PlayerService.getMonthlyActivity(selectedYear, selectedMonth)
-      .then((res) => setActiveDays(res.activeDays ?? []))
+    gqlSdk.GetMonthlyActivity({ year: selectedYear, month: selectedMonth })
+      .then(({ me: res }) => setActiveDays(res.player.monthlyActivity?.activeDays ?? []))
       .catch(() => setActiveDays([]));
   }, [selectedYear, selectedMonth]);
 

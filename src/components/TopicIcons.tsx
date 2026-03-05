@@ -1,16 +1,16 @@
 import React from 'react';
-import { ReactComponent as ActivityIcon } from '../assets/icons/activity.svg';
-import { ReactComponent as BrainIcon } from '../assets/icons/brain.svg';
-import { ReactComponent as BookIcon } from '../assets/icons/book.svg';
-import { ReactComponent as PaintbrushIcon } from '../assets/icons/paintbrush.svg';
-import { ReactComponent as MessageCircleIcon } from '../assets/icons/message-circle.svg';
-import { ReactComponent as SaladIcon } from '../assets/icons/salad.svg';
-import { ReactComponent as ClockIcon } from '../assets/icons/clock.svg';
-import { ReactComponent as CompassIcon } from '../assets/icons/compass.svg';
-import { ReactComponent as MusicIcon } from '../assets/icons/music.svg';
-import { ReactComponent as GamepadIcon } from '../assets/icons/gamepad-2.svg';
-import { ReactComponent as CodeIcon } from '../assets/icons/code.svg';
-import { ReactComponent as LanguagesIcon } from '../assets/icons/languages.svg';
+import ActivityIcon from '../assets/icons/activity.svg?react';
+import BrainIcon from '../assets/icons/brain.svg?react';
+import BookIcon from '../assets/icons/book.svg?react';
+import PaintbrushIcon from '../assets/icons/paintbrush.svg?react';
+import MessageCircleIcon from '../assets/icons/message-circle.svg?react';
+import SaladIcon from '../assets/icons/salad.svg?react';
+import ClockIcon from '../assets/icons/clock.svg?react';
+import CompassIcon from '../assets/icons/compass.svg?react';
+import MusicIcon from '../assets/icons/music.svg?react';
+import GamepadIcon from '../assets/icons/gamepad-2.svg?react';
+import CodeIcon from '../assets/icons/code.svg?react';
+import LanguagesIcon from '../assets/icons/languages.svg?react';
 import { TaskTopic } from '../api';
 
 interface TopicIconProps {

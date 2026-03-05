@@ -6,7 +6,7 @@ import RarityIndicator from './RarityIndicator';
 import Icon from './Icon';
 import { useLocalization } from '../hooks/useLocalization';
 import { getMonthGenitive } from '../utils';
-import { getTaskStaminaCost, SKIP_STAMINA_COST } from '../mocks/mockApi';
+import { getTaskStaminaCost, SKIP_STAMINA_COST } from '../utils/taskUtils';
 
 type TaskCardProps = {
   playerTask: PlayerTask;

@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import type { PlayerTask, CompleteTaskResponse, LocalizedField, Stamina } from '../api';
 import { PlayerTaskStatus as TaskStatus } from '../api';
-import { PlayerService } from '../api';
 import type { PlayerDailyTask } from '../api';
 import TasksGrid from './TasksGrid';
 import TasksList from './TasksList';
@@ -12,10 +11,11 @@ import TaskCompletionOverlay from './TaskCompletionOverlay';
 import DateFilter from './DateFilter';
 import FilterDropdown from './FilterDropdown';
 import ResetFiltersButton from './ResetFiltersButton';
-import { taskActions, api } from '../services';
+import { taskActions } from '../services';
+import { gqlSdk } from '../graphql/client';
 import { useLocalization } from '../hooks/useLocalization';
 import ConfirmDialog from './ConfirmDialog';
-import { getTaskStaminaCost, SKIP_STAMINA_COST } from '../mocks/mockApi';
+import { getTaskStaminaCost, SKIP_STAMINA_COST } from '../utils/taskUtils';
 
 type TasksSectionProps = {
   tasks: PlayerTask[];
@@ -84,8 +84,8 @@ const TasksSection: React.FC<TasksSectionProps> = ({
   useEffect(() => {
     if (viewMode !== 'daily') return;
     setDailyLoading(true);
-    PlayerService.getDailyTasks()
-      .then((res) => setDailyTasks(res.tasks ?? []))
+    gqlSdk.GetDailyTasks()
+      .then(({ me }) => setDailyTasks((me.player.dailyTasks?.tasks ?? []) as any))
       .catch(() => setDailyTasks([]))
       .finally(() => setDailyLoading(false));
   }, [viewMode]);
@@ -114,17 +114,14 @@ const TasksSection: React.FC<TasksSectionProps> = ({
       setCompletedTask(task);
       setCompletionResponse(response);
       
-      // Обновляем стамину через запрос к серверу
       if (onTasksUpdate) {
-        // Обновим стамину после получения новых задач через useTasksRefresh
-        // Временное обновление для мгновенной обратной связи
         setTimeout(() => {
-          api.getPlayerTasks().then((res) => {
-            onTasksUpdate(res.tasks, res.stamina);
-          });
+          gqlSdk.RefreshActiveTasks().then(({ me }) => {
+            const { activeTasks, stamina: s } = me.player;
+            onTasksUpdate(activeTasks.tasks as any, s as any);
+          }).catch(() => {});
         }, 100);
       }
-      // WebSocket уведомления автоматически обновят список задач через useTasksRefresh
     } catch (error: any) {
       console.error('Error completing task:', error);
       if (error?.message?.includes('Not enough stamina')) {
@@ -153,17 +150,14 @@ const TasksSection: React.FC<TasksSectionProps> = ({
       setTaskLoading(true);
       await taskActions.skipTask(playerTask);
       
-      // Обновляем стамину через запрос к серверу
       if (onTasksUpdate) {
-        // Обновим стамину после получения новых задач через useTasksRefresh
-        // Временное обновление для мгновенной обратной связи
         setTimeout(() => {
-          api.getPlayerTasks().then((res) => {
-            onTasksUpdate(res.tasks, res.stamina);
-          });
+          gqlSdk.RefreshActiveTasks().then(({ me }) => {
+            const { activeTasks, stamina: s } = me.player;
+            onTasksUpdate(activeTasks.tasks as any, s as any);
+          }).catch(() => {});
         }, 100);
       }
-      // WebSocket уведомления автоматически обновят список задач через useTasksRefresh
     } catch (error: any) {
       console.error('Error skipping task:', error);
       if (error?.message?.includes('Not enough stamina')) {

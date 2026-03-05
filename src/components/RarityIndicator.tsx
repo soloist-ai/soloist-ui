@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocalization } from '../hooks/useLocalization';
-import { ReactComponent as StarIcon } from '../assets/icons/star.svg';
+import StarIcon from '../assets/icons/star.svg?react';
 
 export interface RarityIndicatorProps {
   rarity: string;

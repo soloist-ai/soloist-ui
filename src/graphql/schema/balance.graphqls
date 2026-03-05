@@ -1,0 +1,42 @@
+# ── Domain types ─────────────────────────────────────────
+
+type Balance {
+    id: UUID!
+    amount: Money!
+    transactions(paging: PagingInput, !options: SearchOptionsInput): SearchBalanceTransactionsResult!
+}
+
+type CompleteTaskBalance {
+    id: UUID!
+    amount: Money!
+}
+
+type BalanceTransaction {
+    id: String!
+    amount: Money!
+    type: BalanceTransactionType!
+    cause: BalanceTransactionCause!
+    createdAt: DateTime!
+}
+
+# ── Result types ─────────────────────────────────────────
+
+type SearchBalanceTransactionsResult {
+    transactions: [BalanceTransaction!]!
+    paging: ResponsePaging!
+    options: ResponseQueryOptions
+}
+
+# ── Enums ────────────────────────────────────────────────
+
+enum BalanceTransactionType {
+    IN
+    OUT
+}
+
+enum BalanceTransactionCause {
+    TASK_COMPLETION
+    LEVEL_UP
+    DAILY_CHECK_IN
+    ITEM_PURCHASE
+}

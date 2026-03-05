@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { UserService } from '../api';
 import type { DayStreak, UserAdditionalInfoResponse } from '../api';
+import { gqlSdk } from '../graphql/client';
 
 interface UserAdditionalInfoContextType {
   photoUrl: string | undefined;
@@ -46,7 +46,13 @@ export const UserAdditionalInfoProvider: React.FC<UserAdditionalInfoProviderProp
     setLoading(true);
     setError(false);
     try {
-      const data: UserAdditionalInfoResponse = await UserService.getUserAdditionalInfo();
+      const { me } = await gqlSdk.GetAppData();
+      const data: UserAdditionalInfoResponse = {
+        photoUrl: me.photoUrl ?? undefined,
+        locale: me.locale ?? { tag: 'ru', isManual: false },
+        roles: me.roles as any,
+        dayStreak: me.player.dayStreak as any,
+      };
       setPhotoUrl(data.photoUrl);
       setDayStreak(data.dayStreak ?? null);
       if (data.photoUrl) {

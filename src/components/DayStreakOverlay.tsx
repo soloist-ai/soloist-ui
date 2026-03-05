@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-import { useUserAdditionalInfo } from '../contexts/UserAdditionalInfoContext';
+import { useAppData } from '../contexts/AppDataContext';
 import { useDayStreakOverlay } from '../contexts/DayStreakOverlayContext';
-import { UserService } from '../api';
+import { gqlSdk } from '../graphql/client';
 import { useLocalization } from '../hooks/useLocalization';
 import { useFullscreenOverlay } from '../hooks/useFullscreenOverlay';
 import { useScrollLock } from '../hooks/useScrollLock';
@@ -16,7 +16,8 @@ const STREAK_NUMBER_DURATION_MS = 1000;
  */
 export function DayStreakOverlay() {
   const { isOpen, message: notificationMessage, close } = useDayStreakOverlay();
-  const { dayStreak: contextStreak, refetch } = useUserAdditionalInfo();
+  const { me, refreshDayStreak } = useAppData();
+  const contextStreak = me?.player?.dayStreak ?? null;
   const { t } = useLocalization();
   const [mounted, setMounted] = useState(false);
   const [streakBefore, setStreakBefore] = useState<number>(0);
@@ -51,11 +52,11 @@ export function DayStreakOverlay() {
     let cancelled = false;
     (async () => {
       try {
-        const info = await UserService.getUserAdditionalInfo();
+        const { me: res } = await gqlSdk.RefreshDayStreak();
         if (cancelled) return;
-        const newCurrent = info.dayStreak?.current ?? streakBefore + 1;
+        const newCurrent = res.player.dayStreak?.current ?? streakBefore + 1;
         setStreakAfter(newCurrent);
-        await refetch();
+        refreshDayStreak();
       } catch {
         // Оставляем streakAfter без изменений
       }
@@ -65,7 +66,7 @@ export function DayStreakOverlay() {
       cancelled = true;
       clearTimeout(t1);
     };
-  }, [isOpen, refetch, streakBefore]);
+  }, [isOpen, refreshDayStreak, streakBefore]);
 
   const handleContinue = () => {
     setMounted(false);

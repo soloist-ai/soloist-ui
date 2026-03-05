@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
-import { PlayerService } from '../api';
 import type { DayStreak } from '../api';
+import { gqlSdk } from '../graphql/client';
 import Icon from './Icon';
 import { useLocalization } from '../hooks/useLocalization';
-import { useUserAdditionalInfo } from '../contexts/UserAdditionalInfoContext';
+import { useAppData } from '../contexts/AppDataContext';
 import { useStreakOverlay } from '../contexts/StreakOverlayContext';
 
 const WEEKDAY_LABELS = [0, 1, 2, 3, 4, 5, 6];
@@ -11,7 +11,8 @@ const MONTH_KEYS = ['january', 'february', 'march', 'april', 'may', 'june', 'jul
 
 /** Панель «Активность за месяц» (календарь стрика). Не полноэкранный overlay — TopBar и BottomBar остаются. */
 export function DayStreakInfoPanel() {
-  const { dayStreak } = useUserAdditionalInfo();
+  const { me } = useAppData();
+  const dayStreak = (me?.player?.dayStreak ?? null) as DayStreak | null;
   const { isOpen, close } = useStreakOverlay();
   if (!isOpen) return null;
   return <DayStreakInfoPanelContent dayStreak={dayStreak} onClose={close} />;
@@ -44,8 +45,8 @@ const DayStreakInfoPanelContent: React.FC<DayStreakInfoPanelContentProps> = ({ d
 
   useEffect(() => {
     setActiveDays([]);
-    PlayerService.getMonthlyActivity(selectedYear, selectedMonth)
-      .then((res) => setActiveDays(res.activeDays ?? []))
+    gqlSdk.GetMonthlyActivity({ year: selectedYear, month: selectedMonth })
+      .then(({ me: res }) => setActiveDays(res.player.monthlyActivity?.activeDays ?? []))
       .catch(() => setActiveDays([]));
   }, [selectedYear, selectedMonth]);
 

@@ -1,0 +1,92 @@
+fragment LevelFields on Level {
+  id
+  level
+  totalExperience
+  currentExperience
+  experienceToNextLevel
+  assessment
+}
+
+fragment MoneyFields on Money {
+  currencyCode
+  amount
+}
+
+fragment StaminaFields on Stamina {
+  id
+  current
+  max
+  isRegenerating
+  regenRate
+  regenIntervalSeconds
+  nextRegenAt
+  fullRegenAt
+}
+
+fragment DayStreakFields on DayStreak {
+  id
+  current
+  max
+  isExtendedToday
+}
+
+fragment TaskFields on Task {
+  id
+  title
+  description
+  experience
+  currencyReward
+  rarity
+  topics
+  agility
+  strength
+  intelligence
+}
+
+fragment PlayerTaskFields on PlayerTask {
+  id
+  createdAt
+  updatedAt
+  order
+  status
+  task {
+    ...TaskFields
+  }
+}
+
+fragment PlayerTaskTopicFields on PlayerTaskTopic {
+  id
+  version
+  isActive
+  taskTopic
+  level {
+    ...LevelFields
+  }
+  isDisabled
+}
+
+fragment ResponsePagingFields on ResponsePaging {
+  totalRowCount
+  totalPageCount
+  currentPage
+  hasMore
+}
+
+fragment CompleteTaskPlayerFields on CompleteTaskPlayer {
+  id
+  agility
+  strength
+  intelligence
+  level {
+    ...LevelFields
+  }
+  balance {
+    id
+    amount {
+      ...MoneyFields
+    }
+  }
+  taskTopics {
+    ...PlayerTaskTopicFields
+  }
+}

@@ -1,11 +1,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useUserAdditionalInfo } from '../contexts/UserAdditionalInfoContext';
+import { useAppData } from '../contexts/AppDataContext';
 import Icon from './Icon';
 
 const TopBar: React.FC = () => {
   const navigate = useNavigate();
-  const { photoUrl, dayStreak } = useUserAdditionalInfo();
+  const { me } = useAppData();
+  const photoUrl = me?.photoUrl ?? undefined;
+  const dayStreak = me?.player?.dayStreak ?? null;
 
   const handlePhotoClick = () => {
     navigate('/profile');

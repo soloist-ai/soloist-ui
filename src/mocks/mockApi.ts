@@ -41,25 +41,7 @@ import type { Stamina } from '../api';
 // Имитация задержки сети
 const delay = (ms: number = 300) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Функция для получения стоимости задачи по редкости
-export const getTaskStaminaCost = (rarity?: TaskRarity): number => {
-  switch (rarity) {
-    case TaskRarity.COMMON:
-      return 10;
-    case TaskRarity.UNCOMMON:
-      return 20;
-    case TaskRarity.RARE:
-      return 30;
-    case TaskRarity.EPIC:
-      return 40;
-    case TaskRarity.LEGENDARY:
-      return 50;
-    default:
-      return 10; // По умолчанию COMMON
-  }
-};
-
-export const SKIP_STAMINA_COST = 5; // Стоимость скипа любой задачи
+export { getTaskStaminaCost, SKIP_STAMINA_COST } from '../utils/taskUtils';
 
 // Хранилище состояния для моков (симулирует состояние на сервере)
 class MockState {

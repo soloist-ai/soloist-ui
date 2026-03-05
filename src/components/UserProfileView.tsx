@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { api } from '../services';
+import { gqlSdk } from '../graphql/client';
 import type { User } from '../api';
 import ProfileView from './ProfileView';
 
@@ -12,13 +12,12 @@ const UserProfileView: React.FC<UserProfileViewProps> = ({ userId, isAuthenticat
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Загружаем данные пользователя
   useEffect(() => {
     if (isAuthenticated && userId) {
       setLoading(true);
-      api.getUserById(userId)
-        .then((userData: User) => {
-          setUser(userData);
+      gqlSdk.GetUserById({ id: userId })
+        .then(({ user: userData }) => {
+          setUser(userData as unknown as User);
           setLoading(false);
         })
         .catch((error: any) => {

@@ -1,17 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useLocalization } from '../hooks/useLocalization';
-import { api } from '../services';
+import { gqlSdk } from '../graphql/client';
 import Icon from './Icon';
-import type { 
-  PlayerTask, 
-  SearchRequest,
-  SearchPlayerTasksResponse,
-  PlayerTaskStatus,
-  LocalizedField,
-  OrderMode,
-  Stamina
-} from '../api';
-import { OrderMode as OrderModeEnum } from '../api';
+import type { PlayerTask, PlayerTaskStatus, LocalizedField, Stamina } from '../api';
+import { OrderMode } from '../graphql/generated';
 import TasksGrid from './TasksGrid';
 import TaskCardSkeleton from './TaskCardSkeleton';
 import ScrollNavigationButtons from './ScrollNavigationButtons';
@@ -45,17 +37,12 @@ const TasksList: React.FC<TasksListProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [totalCount, setTotalCount] = useState<number | null>(null);
-  const [, setAvailableFilters] = useState<LocalizedField[]>([]);
-  const [, setAvailableSorts] = useState<string[]>([]);
   const [showContent, setShowContent] = useState(false);
   
   // Используем переданные фильтры или значения по умолчанию
   const dateFilters = useMemo(() => propDateFilters || { from: '', to: '' }, [propDateFilters]);
   const enumFilters = useMemo(() => propEnumFilters || {}, [propEnumFilters]);
-  const sorts: {field: string, mode: OrderMode}[] = useMemo(() => [{
-    field: 'updatedAt',
-    mode: OrderModeEnum.DESC
-  }], []);
+  const sorts = useMemo(() => [{ field: 'updatedAt', mode: OrderMode.Desc }], []);
   
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
@@ -110,53 +97,39 @@ const TasksList: React.FC<TasksListProps> = ({
         });
       }
       
-      const request: SearchRequest = {
+      const result = await gqlSdk.GetClosedTasks({
+        paging: { page, pageSize: 20 },
         options: {
           filter: {
             dateFilters: dateFilters.from && dateFilters.to ? [{
               field: 'createdAt',
-              range: {
-                from: dateFilters.from,
-                to: dateFilters.to
-              }
+              range: { from: dateFilters.from, to: dateFilters.to },
             }] : undefined,
-            enumFilters: allEnumFilters.length > 0 ? allEnumFilters : undefined
+            enumFilters: allEnumFilters.length > 0 ? allEnumFilters : undefined,
           },
-          // Всегда отправляем сортировку по createdAt (как в списке транзакций)
-          sorts: sorts
-        }
-      };
+          sorts,
+        },
+      });
 
-      const response: SearchPlayerTasksResponse = await api.searchPlayerTasks(
-        request,
-        page,
-        20 // pageSize
-      );
-      
-      const newTasks = response.tasks || [];
-      // Если получили 0 записей, значит больше нет данных, даже если API вернул hasMore: true
-      const hasMoreData = newTasks.length > 0 && (response.paging?.hasMore || false);
-      
-      // Сохраняем общее количество элементов
-      if (response.paging?.totalRowCount !== undefined) {
-        setTotalCount(response.paging.totalRowCount);
+      const { tasks: newTasks, paging } = result.me.player.closedTasks;
+      const hasMoreData = newTasks.length > 0 && (paging?.hasMore || false);
+
+      if (paging?.totalRowCount !== undefined) {
+        setTotalCount(paging.totalRowCount);
       }
       
       if (reset) {
-        setTasks(newTasks);
+        setTasks(newTasks as unknown as PlayerTask[]);
         setHasMore(hasMoreData);
         currentPageRef.current = 0;
         hasMoreRef.current = hasMoreData;
-        // Сбрасываем флаг для fade-in анимации при новой загрузке
         if (newTasks.length > 0) {
           setShowContent(false);
-          // Запускаем fade-in анимацию после небольшой задержки
           setTimeout(() => setShowContent(true), 50);
         }
       } else {
-        // Проверяем, что мы действительно получили новые данные
         if (newTasks.length > 0) {
-          setTasks(prev => [...prev, ...newTasks]);
+          setTasks(prev => [...prev, ...(newTasks as unknown as PlayerTask[])]);
           setHasMore(hasMoreData);
           currentPageRef.current = page;
           hasMoreRef.current = hasMoreData;
@@ -167,16 +140,6 @@ const TasksList: React.FC<TasksListProps> = ({
         }
       }
       
-      // Обновляем фильтры и сортировки
-      if (response.options) {
-        setAvailableFilters(response.options.filters || []);
-        setAvailableSorts(response.options.sorts || []);
-      }
-      
-      // Уведомляем родительский компонент о доступных фильтрах
-      if (response.options?.filters) {
-        onFiltersUpdate?.(response.options.filters);
-      }
       
     } catch (err) {
       console.error('Error loading tasks:', err);
@@ -186,7 +149,7 @@ const TasksList: React.FC<TasksListProps> = ({
       setLoadingMore(false);
       isLoadingRef.current = false;
     }
-  }, [statusFilter, dateFilters, enumFilters, sorts, t, onFiltersUpdate]);
+  }, [statusFilter, dateFilters, enumFilters, sorts, t]);
 
   // Сохраняем актуальную версию функции в ref
   useEffect(() => {

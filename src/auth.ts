@@ -134,7 +134,7 @@ async function handle401Error(): Promise<string | null> {
 // Сигнатура должна соответствовать типу Resolver<string>: (options: ApiRequestOptions) => Promise<string>
 async function getTokenForRequest(options: any): Promise<string> {
   // Не отправляем токен для login и refresh запросов
-  if (options.url === '/api/v1/auth/login' || options.url === '/api/v1/auth/refresh') {
+  if (options.url?.includes('/api/auth/login') || options.url?.includes('/api/auth/refresh')) {
     return '';
   }
 

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { UserService } from '../api';
 import { useTelegram } from '../useTelegram';
+import { gqlSdk } from '../graphql/client';
 
 import { type Language } from '../locales';
 
@@ -118,7 +118,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // Persist user locale to backend (manual update)
     try {
       // Fire-and-forget; UI state remains responsive
-      void UserService.updateUserLocale({ locale: language });
+      void gqlSdk.UpdateUserLocale({ locale: { tag: language, isManual: true } });
     } catch (error) {
       console.error('Failed to update user locale on backend:', error);
     }

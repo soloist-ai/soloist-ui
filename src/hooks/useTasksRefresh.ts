@@ -1,6 +1,6 @@
 import { useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
-import { api } from '../services';
+import { gqlSdk } from '../graphql/client';
 import type { PlayerTask, Stamina } from '../api';
 
 interface UseTasksRefreshProps {
@@ -14,33 +14,24 @@ export const useTasksRefresh = ({ isAuthenticated, onTasksUpdate }: UseTasksRefr
 
   const refreshTasks = useCallback(async () => {
     if (!isAuthenticated || !isTasksTabActive) return;
-    
     try {
-      const response = await api.getPlayerTasks();
-      onTasksUpdate(response.tasks, response.stamina);
+      const { me } = await gqlSdk.RefreshActiveTasks();
+      const { activeTasks, stamina } = me.player;
+      onTasksUpdate(activeTasks.tasks as unknown as PlayerTask[], stamina as Stamina);
     } catch (error) {
       console.error('Error refreshing tasks:', error);
     }
   }, [isAuthenticated, isTasksTabActive, onTasksUpdate]);
 
-
-  // Слушаем уведомления через глобальное событие
   useEffect(() => {
     if (!isAuthenticated || !isTasksTabActive) return;
 
     const handleTasksNotification = (event: CustomEvent) => {
-      const { source } = event.detail;
-      if (source === 'tasks') {
-        refreshTasks();
-      }
+      if (event.detail?.source === 'tasks') refreshTasks();
     };
 
-    // Добавляем слушатель для кастомного события
     window.addEventListener('tasks-notification', handleTasksNotification as EventListener);
-
-    return () => {
-      window.removeEventListener('tasks-notification', handleTasksNotification as EventListener);
-    };
+    return () => window.removeEventListener('tasks-notification', handleTasksNotification as EventListener);
   }, [isAuthenticated, isTasksTabActive, refreshTasks]);
 
   return { refreshTasks };

@@ -2,7 +2,8 @@ import { useEffect, useRef } from 'react';
 import type { LoginResponse } from '../api';
 import { useNotification } from '../components/NotificationSystem';
 import { useSettings } from './useSettings';
-import { fetchAndUpdateUserLocale } from '../utils/localeUtils';
+import { gqlSdk } from '../graphql/client';
+import { applyLocale } from '../utils/localeUtils';
 import { useMocks } from '../config/environment';
 import { websocketManager } from '../services/websocketManager';
 
@@ -67,7 +68,8 @@ export function useWebSocketNotifications({ enabled, authPromise }: UseWebSocket
     // Функция для обработки обновления локализации
     const handleLocaleUpdate = async () => {
       try {
-        await fetchAndUpdateUserLocale(updateSettings);
+        const { me } = await gqlSdk.GetAppData();
+        applyLocale(me.locale, updateSettings);
         console.log('[WS][Locale] Updated locale from server via WebSocket notification');
       } catch (error) {
         console.error('[WS][Locale] Failed to update locale:', error);

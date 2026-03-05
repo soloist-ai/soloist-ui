@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocalization } from '../hooks/useLocalization';
-import { api } from '../services';
-import type { LeaderboardUser } from '../api';
+import { gqlSdk } from '../graphql/client';
+import type { GetUsersLeaderboardQuery, GetLeaderboardInitialQuery } from '../graphql/generated';
 import { LeaderboardType } from '../api';
 import Icon from './Icon';
 import { cn } from '../utils';
 import ScrollNavigationButtons from './ScrollNavigationButtons';
+
+type LeaderboardUser = GetUsersLeaderboardQuery['usersLeaderboard']['users'][number];
+type LeaderboardCurrentUser = GetLeaderboardInitialQuery['userLeaderboard'];
 
 type LeaderboardViewProps = {
   isAuthenticated: boolean;
@@ -21,10 +24,9 @@ const LeaderboardView: React.FC<LeaderboardViewProps> = ({
   onUserClick
 }) => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([]);
-  const [currentUser, setCurrentUser] = useState<LeaderboardUser | null>(null);
+  const [currentUser, setCurrentUser] = useState<LeaderboardCurrentUser | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [loadingCurrentUser, setLoadingCurrentUser] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [totalCount, setTotalCount] = useState<number | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -38,66 +40,63 @@ const LeaderboardView: React.FC<LeaderboardViewProps> = ({
   const hasMoreRef = useRef(true);
   const isLoadingRef = useRef(false);
   const loadLeaderboardRef = useRef<typeof loadLeaderboard | undefined>(undefined);
-  const isLoadingCurrentUserRef = useRef(false);
-  const pendingLeaderboardLoadRef = useRef(false);
-  const pendingCurrentUserLoadRef = useRef(false);
 
-  // Общая функция для обновления displayLeaderboardType после завершения загрузки
-  const updateDisplayTypeAfterLoad = useCallback(() => {
-    // Обновляем displayLeaderboardType только после завершения обоих запросов
-    if (!pendingLeaderboardLoadRef.current && !pendingCurrentUserLoadRef.current) {
+  // Initial load or type change — fetches users list + current user position in one request
+  const loadInitial = useCallback(async () => {
+    if (!isAuthenticated) return;
+    if (isLoadingRef.current) return;
+
+    isLoadingRef.current = true;
+    setLoading(true);
+    currentPageRef.current = 0;
+    hasMoreRef.current = true;
+
+    try {
+      const result = await gqlSdk.GetLeaderboardInitial({
+        filter: { type: leaderboardType as any },
+        paging: { page: 0, pageSize: 20 },
+      });
+      const { users: newUsers, paging } = result.usersLeaderboard;
+      const hasMoreData = newUsers.length > 0 && (paging?.hasMore || false);
+
+      if (paging?.totalRowCount !== undefined) setTotalCount(paging.totalRowCount);
+      setLeaderboard(newUsers);
+      setHasMore(hasMoreData);
+      hasMoreRef.current = hasMoreData;
+      setCurrentUser(result.userLeaderboard ?? null);
+    } catch (error: any) {
+      // graphql-request throws even on partial success (errors[] + data).
+      // If usersLeaderboard data is present, use it and treat currentUser as null.
+      const partialData = error?.response?.data;
+      if (partialData?.usersLeaderboard) {
+        const { users: newUsers, paging } = partialData.usersLeaderboard;
+        const hasMoreData = newUsers.length > 0 && (paging?.hasMore || false);
+        if (paging?.totalRowCount !== undefined) setTotalCount(paging.totalRowCount);
+        setLeaderboard(newUsers);
+        setHasMore(hasMoreData);
+        hasMoreRef.current = hasMoreData;
+        setCurrentUser(null);
+      } else {
+        console.error('[Leaderboard] initial load failed:', error);
+      }
+    } finally {
+      setLoading(false);
+      isLoadingRef.current = false;
       setTimeout(() => {
         setIsTransitioning(false);
         setIsCurrentUserTransitioning(false);
         setDisplayLeaderboardType(leaderboardType);
       }, 25);
     }
-  }, [leaderboardType]);
+  }, [isAuthenticated, leaderboardType]);
 
-  // Загрузка данных текущего пользователя
-  const loadCurrentUser = useCallback(async () => {
-    if (!isAuthenticated) return;
-    
-    // Защита от дублирования запросов
-    if (isLoadingCurrentUserRef.current) return;
-    
-    isLoadingCurrentUserRef.current = true;
-    setLoadingCurrentUser(true);
-    try {
-      const response = await api.getUserLeaderboard(
-        leaderboardType,
-        {}
-      );
-      
-      if (response.user) {
-        setCurrentUser(response.user);
-      }
-      // Отмечаем, что загрузка текущего пользователя завершена
-      pendingCurrentUserLoadRef.current = false;
-      // Проверяем, можно ли обновить displayLeaderboardType
-      updateDisplayTypeAfterLoad();
-    } catch (error: any) {
-      console.error('Error loading current user leaderboard:', error);
-      setCurrentUser(null);
-      // Отмечаем, что загрузка текущего пользователя завершена (даже при ошибке)
-      pendingCurrentUserLoadRef.current = false;
-      // Проверяем, можно ли обновить displayLeaderboardType
-      updateDisplayTypeAfterLoad();
-    } finally {
-      setLoadingCurrentUser(false);
-      isLoadingCurrentUserRef.current = false;
-    }
-  }, [isAuthenticated, leaderboardType, updateDisplayTypeAfterLoad]);
-
-  // Загрузка лидерборда с infinity scroll
+  // Subsequent pages — only list, no current user
   const loadLeaderboard = useCallback(async (page: number = 0, reset: boolean = false) => {
     if (!isAuthenticated) return;
-    
     if (!reset && !hasMoreRef.current) return;
     if (isLoadingRef.current) return;
-    
+
     isLoadingRef.current = true;
-    
     if (reset) {
       setLoading(true);
       currentPageRef.current = 0;
@@ -106,49 +105,32 @@ const LeaderboardView: React.FC<LeaderboardViewProps> = ({
     }
 
     try {
-      const response = await api.getUsersLeaderboard(
-        leaderboardType,
-        {},
-        page,
-        20
-      );
-      
-      const newUsers = response.users || [];
-      const hasMoreData = newUsers.length > 0 && (response.paging?.hasMore || false);
-      
-      // Сохраняем общее количество элементов
-      if (response.paging?.totalRowCount !== undefined) {
-        setTotalCount(response.paging.totalRowCount);
-      }
-      
-      if (reset) {
-        setLeaderboard(newUsers);
+      const result = await gqlSdk.GetUsersLeaderboard({
+        filter: { type: leaderboardType as any },
+        paging: { page, pageSize: 20 },
+      });
+      const { users: newUsers, paging } = result.usersLeaderboard;
+      const hasMoreData = newUsers.length > 0 && (paging?.hasMore || false);
+
+      if (paging?.totalRowCount !== undefined) setTotalCount(paging.totalRowCount);
+
+      if (newUsers.length > 0) {
+        setLeaderboard(prev => [...prev, ...newUsers]);
         setHasMore(hasMoreData);
-        currentPageRef.current = page; // Используем переданный page, а не 0
+        currentPageRef.current = page;
         hasMoreRef.current = hasMoreData;
-        // Отмечаем, что загрузка основного списка завершена
-        pendingLeaderboardLoadRef.current = false;
-        // Проверяем, можно ли обновить displayLeaderboardType
-        updateDisplayTypeAfterLoad();
       } else {
-        if (newUsers.length > 0) {
-          setLeaderboard(prev => [...prev, ...newUsers]);
-          setHasMore(hasMoreData);
-          currentPageRef.current = page;
-          hasMoreRef.current = hasMoreData;
-        } else {
-          setHasMore(false);
-          hasMoreRef.current = false;
-        }
+        setHasMore(false);
+        hasMoreRef.current = false;
       }
     } catch (error) {
-      console.error('Error loading leaderboard:', error);
+      console.error('[Leaderboard] load page failed:', error);
     } finally {
       setLoading(false);
       setLoadingMore(false);
       isLoadingRef.current = false;
     }
-  }, [isAuthenticated, leaderboardType, updateDisplayTypeAfterLoad]);
+  }, [isAuthenticated, leaderboardType]);
 
   // Сохраняем актуальную версию функции в ref
   useEffect(() => {
@@ -193,42 +175,26 @@ const LeaderboardView: React.FC<LeaderboardViewProps> = ({
     };
   }, [hasMore, loadingMore, leaderboard.length]);
 
-  // Первоначальная загрузка данных при монтировании компонента
+  // Initial load on mount
   useEffect(() => {
     if (isAuthenticated && leaderboard.length === 0) {
-      // Загружаем данные при первом открытии без анимации
-      loadLeaderboard(0, true);
-      loadCurrentUser();
+      loadInitial();
     }
   }, [isAuthenticated]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Загрузка при изменении типа с плавным переходом
+  // Type change — fade-out then reload both lists together
   useEffect(() => {
-    // Если тип не изменился, не делаем ничего
-    if (displayLeaderboardType === leaderboardType) {
-      return;
-    }
-    
-    // Начинаем fade-out для основного списка и карточки текущего пользователя
+    if (displayLeaderboardType === leaderboardType) return;
+
     setIsTransitioning(true);
     setIsCurrentUserTransitioning(true);
-    
-    // Устанавливаем флаги ожидания загрузки
-    pendingLeaderboardLoadRef.current = true;
-    pendingCurrentUserLoadRef.current = true;
-    
-    // После fade-out загружаем новые данные
+
     const fadeOutTimeout = setTimeout(() => {
-      hasMoreRef.current = true;
-      currentPageRef.current = 0;
-      loadLeaderboard(0, true);
-      loadCurrentUser();
+      loadInitial();
     }, 100);
-    
-    return () => {
-      clearTimeout(fadeOutTimeout);
-    };
-  }, [leaderboardType, displayLeaderboardType, loadLeaderboard, loadCurrentUser]);
+
+    return () => clearTimeout(fadeOutTimeout);
+  }, [leaderboardType, displayLeaderboardType, loadInitial]);
 
   const handleTypeChange = (type: LeaderboardType) => {
     onTypeChange(type);
@@ -684,7 +650,7 @@ const LeaderboardView: React.FC<LeaderboardViewProps> = ({
       })()}
 
       {/* Loading indicator for current user */}
-      {loadingCurrentUser && !currentUser && (
+      {loading && !currentUser && (
         <div className="mb-3">
           <div
             className="text-xs font-tech mb-2 px-1"
