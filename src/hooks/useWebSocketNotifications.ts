@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { LoginResponse } from '../api';
-import { useNotification } from '../components/NotificationSystem';
+import { useNotification } from '../components/common/NotificationSystem';
 import { useSettings } from './useSettings';
 import { gqlSdk } from '../graphql/client';
 import { applyLocale } from '../utils/localeUtils';

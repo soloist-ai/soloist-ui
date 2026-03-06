@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useLocalization } from '../hooks/useLocalization';
-import { useTelegramWebApp } from '../useTelegram';
+import { useTelegramWebApp } from '../hooks/useTelegram';
 import { LeaderboardType } from '../api';
-import Icon, { IconType } from '../components/Icon';
-import LeaderboardView from '../components/LeaderboardView';
-import UserProfileView from '../components/UserProfileView';
+import Icon, { IconType } from '../components/common/Icon';
+import LeaderboardView from '../components/leaderboard/LeaderboardView';
+import UserProfileView from '../components/profile/UserProfileView';
 import { cn, getOptimizedBlur } from '../utils';
 import { globalBackButtonHandlerRef } from '../App';
 import { useStreakOverlay } from '../contexts/StreakOverlayContext';

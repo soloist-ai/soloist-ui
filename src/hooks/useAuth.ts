@@ -1,5 +1,5 @@
 import {useState, useEffect, useRef} from 'react';
-import {useTelegram} from '../useTelegram';
+import {useTelegram} from './useTelegram';
 import {auth} from '../auth';
 import type {LoginResponse} from '../api';
 

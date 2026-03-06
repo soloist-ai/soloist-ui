@@ -1,14 +1,15 @@
-import {useEffect, useState} from 'react';
+import {useEffect, useState, lazy, Suspense} from 'react';
 import { createPortal } from 'react-dom';
 import './App.css';
 import { config } from './config/environment';
-import MaintenanceScreen from './components/MaintenanceScreen';
-import TasksTab from './tabs/TasksTab';
-import ProfileTab from './tabs/ProfileTab';
-import BalanceTab from './tabs/BalanceTab';
-import MenuTab from './tabs/MenuTab';
-import BottomBar from './components/BottomBar';
-import {TelegramWidget} from './components/TelegramWidget';
+import MaintenanceScreen from './components/common/MaintenanceScreen';
+
+const TasksTab = lazy(() => import('./tabs/TasksTab'));
+const ProfileTab = lazy(() => import('./tabs/ProfileTab'));
+const BalanceTab = lazy(() => import('./tabs/BalanceTab'));
+const MenuTab = lazy(() => import('./tabs/MenuTab'));
+import BottomBar from './components/layout/BottomBar';
+import {TelegramWidget} from './components/common/TelegramWidget';
 import {
   HashRouter as Router,
   Routes,
@@ -16,28 +17,28 @@ import {
   Navigate,
   useLocation
 } from 'react-router-dom';
-import WelcomeTab from './tabs/WelcomeTab';
+const WelcomeTab = lazy(() => import('./tabs/WelcomeTab'));
 import {useAuth} from './hooks/useAuth';
 import {useLocaleSync} from './hooks/useLocaleSync';
 import {useWebSocketNotifications} from './hooks/useWebSocketNotifications';
-import {NotificationProvider} from './components/NotificationSystem';
-import {useTelegram, useTelegramWebApp} from './useTelegram';
+import {NotificationProvider} from './components/common/NotificationSystem';
+import {useTelegram, useTelegramWebApp} from './hooks/useTelegram';
 import {ModalProvider, useModal} from './contexts/ModalContext';
 import {useTelegramAdaptive} from './hooks/useTelegramAdaptive';
-import AuthLoadingScreen from './components/AuthLoadingScreen';
-import SessionExpiredDialog from './components/SessionExpiredDialog';
+import AuthLoadingScreen from './components/common/AuthLoadingScreen';
+import SessionExpiredDialog from './components/dialogs/SessionExpiredDialog';
 import {auth} from './auth';
-import ConfirmDialog from './components/ConfirmDialog';
+import ConfirmDialog from './components/dialogs/ConfirmDialog';
 import {useUiUpdate} from './hooks/useUiUpdate';
 import {useLocalization} from './hooks/useLocalization';
 import {AppDataProvider} from './contexts/AppDataContext';
 import {StreakOverlayProvider} from './contexts/StreakOverlayContext';
-import TopBar from './components/TopBar';
-import { DayStreakNavigator } from './components/DayStreakNavigator';
-import { DayStreakOverlay } from './components/DayStreakOverlay';
+import TopBar from './components/layout/TopBar';
+import { DayStreakNavigator } from './components/streak/DayStreakNavigator';
+import { DayStreakOverlay } from './components/streak/DayStreakOverlay';
 import { DayStreakOverlayProvider, useDayStreakOverlay } from './contexts/DayStreakOverlayContext';
-import StreakCalendarTab from './tabs/StreakCalendarTab';
-import {BackButtonStreakSync} from './components/BackButtonStreakSync';
+const StreakCalendarTab = lazy(() => import('./tabs/StreakCalendarTab'));
+import {BackButtonStreakSync} from './components/streak/BackButtonStreakSync';
 
 // Глобальный ref для хранения обработчика кнопки "Назад" (экспортируем для использования в MenuTab)
 export const globalBackButtonHandlerRef = { current: null as (() => void) | null };
@@ -67,17 +68,19 @@ function AuthenticatedLayout({
       )}
       <main className={`tab-content custom-scrollbar flex flex-col relative z-0 ${isAuthenticated ? 'tab-content-with-top-bar' : ''} ${isBottomBarVisible && !isDayStreakOverlayOpen ? 'tab-content-with-bottom-bar' : 'tab-content-without-bottom-bar'}`}>
         <div className="relative flex-1 min-h-0 flex flex-col">
-          <Routes>
-            <Route path="/" element={<WelcomeTab canStartAnimation={isLoadingScreenClosed} />}/>
-            <Route path="/welcome" element={<WelcomeTab canStartAnimation={isLoadingScreenClosed} />}/>
-            <Route path="/tasks" element={<TasksTab isAuthenticated={isAuthenticated}/>}/>
-            <Route path="/profile" element={<ProfileTab isAuthenticated={isAuthenticated}/>}/>
-            <Route path="/menu" element={<MenuTab isAuthenticated={isAuthenticated}/>}/>
-            <Route path="/leaderboard" element={<MenuTab isAuthenticated={isAuthenticated}/>}/>
-            <Route path="/balance" element={<BalanceTab isAuthenticated={isAuthenticated}/>}/>
-            <Route path="/streak" element={<StreakCalendarTab />}/>
-            <Route path="*" element={<Navigate to="/" replace/>}/>
-          </Routes>
+          <Suspense fallback={null}>
+            <Routes>
+              <Route path="/" element={<WelcomeTab canStartAnimation={isLoadingScreenClosed} />}/>
+              <Route path="/welcome" element={<WelcomeTab canStartAnimation={isLoadingScreenClosed} />}/>
+              <Route path="/tasks" element={<TasksTab isAuthenticated={isAuthenticated}/>}/>
+              <Route path="/profile" element={<ProfileTab isAuthenticated={isAuthenticated}/>}/>
+              <Route path="/menu" element={<MenuTab isAuthenticated={isAuthenticated}/>}/>
+              <Route path="/leaderboard" element={<MenuTab isAuthenticated={isAuthenticated}/>}/>
+              <Route path="/balance" element={<BalanceTab isAuthenticated={isAuthenticated}/>}/>
+              <Route path="/streak" element={<StreakCalendarTab />}/>
+              <Route path="*" element={<Navigate to="/" replace/>}/>
+            </Routes>
+          </Suspense>
         </div>
       </main>
       {isAuthenticated && (

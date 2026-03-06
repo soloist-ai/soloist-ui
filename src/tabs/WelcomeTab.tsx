@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import TextType from '../blocks/TextAnimations/TextType/TextType';
+import TextType from '../components/common/TextType';
 import { useLocalization } from '../hooks/useLocalization';
 import { cn } from '../utils';
 

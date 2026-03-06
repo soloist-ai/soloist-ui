@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocalization } from '../hooks/useLocalization';
 import type { LocalizedField } from '../api';
-import BankingTransactionsList, { type GqlTransaction } from '../components/BankingTransactionsList';
-import Icon from '../components/Icon';
-import FilterDropdown from '../components/FilterDropdown';
-import DateFilter from '../components/DateFilter';
-import ResetFiltersButton from '../components/ResetFiltersButton';
+import BankingTransactionsList, { type GqlTransaction } from '../components/balance/BankingTransactionsList';
+import Icon from '../components/common/Icon';
+import FilterDropdown from '../components/filters/FilterDropdown';
+import DateFilter from '../components/filters/DateFilter';
+import ResetFiltersButton from '../components/filters/ResetFiltersButton';
 import { gqlSdk } from '../graphql/client';
 import type { MoneyFieldsFragment, ResponsePagingFieldsFragment, OrderMode as GqlOrderMode } from '../graphql/generated';
 import { OrderMode } from '../graphql/generated';
@@ -39,10 +39,6 @@ const BalanceTab: React.FC<BalanceTabProps> = ({ isAuthenticated }) => {
   const { t } = useLocalization();
 
   useEffect(() => {
-    setTimeout(() => setContentLoaded(true), 50);
-  }, []);
-
-  useEffect(() => {
     if (!isAuthenticated) {
       fetchInitiatedRef.current = false;
       return;
@@ -60,7 +56,10 @@ const BalanceTab: React.FC<BalanceTabProps> = ({ isAuthenticated }) => {
         transactions: balance.transactions.transactions as GqlTransaction[],
         paging: balance.transactions.paging,
       });
-      setTimeout(() => setBalanceLoaded(true), 50);
+      setTimeout(() => {
+        setContentLoaded(true);
+        setBalanceLoaded(true);
+      }, 50);
     }).catch((err) => console.error('[BalanceTab] failed to load balance:', err));
   }, [isAuthenticated]);
 
@@ -348,18 +347,63 @@ export const BalanceSkeleton: React.FC = () => (
             ></div>
           </div>
           <div className="flex gap-3">
-            <div 
+            <div
               className="flex-1 h-12 rounded-xl"
               style={{
                 background: 'rgba(220, 235, 245, 0.1)'
               }}
             ></div>
-            <div 
+            <div
               className="flex-1 h-12 rounded-xl"
               style={{
                 background: 'rgba(220, 235, 245, 0.1)'
               }}
             ></div>
+          </div>
+        </div>
+      </div>
+
+      {/* Transactions skeleton */}
+      <div className="flex justify-center">
+        <div className="max-w-4xl w-full">
+          <div
+            className="h-7 w-44 rounded-lg mb-6 animate-pulse"
+            style={{ background: 'rgba(220, 235, 245, 0.1)' }}
+          />
+          <div className="space-y-3">
+            {[...Array(5)].map((_, i) => (
+              <div
+                key={i}
+                className="rounded-xl p-5 animate-pulse"
+                style={{
+                  background: 'rgba(220, 235, 245, 0.05)',
+                  border: '1px solid rgba(220, 235, 245, 0.1)',
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div
+                      className="w-12 h-12 rounded-xl flex-shrink-0"
+                      style={{ background: 'rgba(220, 235, 245, 0.1)' }}
+                    />
+                    <div>
+                      <div
+                        className="h-5 rounded mb-2"
+                        style={{ width: `${96 + (i % 3) * 24}px`, background: 'rgba(220, 235, 245, 0.1)' }}
+                      />
+                      <div
+                        className="h-4 w-16 rounded"
+                        style={{ background: 'rgba(220, 235, 245, 0.08)' }}
+                      />
+                    </div>
+                  </div>
+                  <div
+                    className="h-6 w-20 rounded"
+                    style={{ background: 'rgba(220, 235, 245, 0.1)' }}
+                  />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

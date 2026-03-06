@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { User } from '../api';
-import ProfileView from '../components/ProfileView';
+import ProfileView from '../components/profile/ProfileView';
 import { gqlSdk } from '../graphql/client';
 
 type ProfileTabProps = {

@@ -40,6 +40,7 @@ export default defineConfig({
           if (id.includes('node_modules/i18next') || id.includes('node_modules/react-i18next')) return 'vendor-i18n';
           if (id.includes('node_modules/@lottiefiles/') || id.includes('node_modules/@dotlottie/')) return 'vendor-lottie';
           if (id.includes('node_modules/@radix-ui/') || id.includes('node_modules/@headlessui/')) return 'vendor-ui';
+          if (id.includes('node_modules/@stomp/')) return 'vendor-stomp';
           // Everything else: one stable vendor chunk (one-way dep → vendor-react, no circular)
           return 'vendor';
         },

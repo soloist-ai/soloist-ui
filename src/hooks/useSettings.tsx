@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useTelegram } from '../useTelegram';
+import { useTelegram } from './useTelegram';
 import { gqlSdk } from '../graphql/client';
 
 import { type Language } from '../locales';

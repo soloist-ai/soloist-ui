@@ -146,6 +146,28 @@ async function handleGraphqlMock(operationName: string, variables?: Record<strin
         },
       };
     }
+    case 'GetUserProfile': {
+      const data = await mockUserService.getCurrentUser();
+      const u = data.user;
+      return {
+        me: {
+          id: u.id,
+          username: u.username,
+          firstName: u.firstName,
+          lastName: u.lastName,
+          photoUrl: u.photoUrl,
+          roles: [],
+          locale: u.locale ? { tag: String(u.locale), isManual: false } : null,
+          player: {
+            id: u.player.id,
+            agility: u.player.agility,
+            strength: u.player.strength,
+            intelligence: u.player.intelligence,
+            level: u.player.level,
+          },
+        },
+      };
+    }
     case 'GetUserById': {
       const userId = variables?.id as number | undefined;
       if (userId == null) throw new Error('GetUserById requires id variable');
@@ -183,6 +205,16 @@ async function handleGraphqlMock(operationName: string, variables?: Record<strin
         },
       };
     }
+    case 'GetPlayerTopics': {
+      const data = await mockPlayerService.getCurrentPlayerTopics();
+      return {
+        me: {
+          player: {
+            taskTopics: { topics: data.playerTaskTopics },
+          },
+        },
+      };
+    }
     case 'GetPlayerBalance': {
       const data = await mockPlayerService.getPlayerBalance();
       return {
@@ -191,6 +223,28 @@ async function handleGraphqlMock(operationName: string, variables?: Record<strin
             balance: {
               id: data.balance.id,
               amount: data.balance.balance,
+            },
+          },
+        },
+      };
+    }
+    case 'GetBalanceWithTransactions': {
+      const page = (variables?.paging as { page?: number })?.page;
+      const pageSize = (variables?.paging as { pageSize?: number })?.pageSize ?? 20;
+      const [balanceData, transData] = await Promise.all([
+        mockPlayerService.getPlayerBalance(),
+        mockPlayerService.searchPlayerBalanceTransactions({}, page, pageSize),
+      ]);
+      return {
+        me: {
+          player: {
+            balance: {
+              id: balanceData.balance.id,
+              amount: balanceData.balance.balance,
+              transactions: {
+                transactions: transData.transactions,
+                paging: transData.paging,
+              },
             },
           },
         },
@@ -249,6 +303,20 @@ async function handleGraphqlMock(operationName: string, variables?: Record<strin
         { range: filter?.range as any }
       );
       return { userLeaderboard: data.user };
+    }
+    case 'GetLeaderboardInitial': {
+      const filter = variables?.filter as { type?: string; range?: unknown } | undefined;
+      const page = (variables?.paging as { page?: number })?.page;
+      const pageSize = (variables?.paging as { pageSize?: number })?.pageSize ?? 20;
+      const type = (filter?.type as keyof typeof LeaderboardType) ?? 'TASKS';
+      const [usersData, userData] = await Promise.all([
+        mockUserService.getUsersLeaderboard(LeaderboardType[type], { range: filter?.range as any }, page, pageSize),
+        mockUserService.getUserLeaderboard(LeaderboardType[type], { range: filter?.range as any }),
+      ]);
+      return {
+        usersLeaderboard: usersData,
+        userLeaderboard: userData.user,
+      };
     }
     case 'GetMonthlyActivity': {
       const year = variables?.year as number;

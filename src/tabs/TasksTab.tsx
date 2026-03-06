@@ -3,12 +3,12 @@ import type { PlayerTask, Stamina } from '../api';
 import { gqlSdk } from '../graphql/client';
 import { useLocalization } from '../hooks/useLocalization';
 import { useTasksRefresh } from '../hooks/useTasksRefresh';
-import TasksSection from '../components/TasksSection';
-import TopicsSection from '../components/TopicsSection';
-import TaskCardSkeleton from '../components/TaskCardSkeleton';
-import Icon from '../components/Icon';
-import StaminaIndicator from '../components/StaminaIndicator';
-import StaminaIndicatorSkeleton from '../components/StaminaIndicatorSkeleton';
+import TasksSection from '../components/tasks/TasksSection';
+import TopicsSection from '../components/tasks/TopicsSection';
+import TaskCardSkeleton from '../components/tasks/TaskCardSkeleton';
+import Icon from '../components/common/Icon';
+import StaminaIndicator from '../components/tasks/StaminaIndicator';
+import StaminaIndicatorSkeleton from '../components/tasks/StaminaIndicatorSkeleton';
 
 type TasksTabProps = {
   isAuthenticated: boolean;

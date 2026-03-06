@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useTelegram } from '../useTelegram';
+import { useTelegram } from './useTelegram';
 
 /**
  * Централизованный хук для управления адаптивностью Telegram Mini App
