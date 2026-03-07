@@ -1,12 +1,12 @@
-import { TaskRarity } from '../api';
+import { Rarity } from '../graphql/generated';
 
-export const getTaskStaminaCost = (rarity?: TaskRarity): number => {
+export const getTaskStaminaCost = (rarity?: Rarity): number => {
   switch (rarity) {
-    case TaskRarity.COMMON: return 10;
-    case TaskRarity.UNCOMMON: return 20;
-    case TaskRarity.RARE: return 30;
-    case TaskRarity.EPIC: return 40;
-    case TaskRarity.LEGENDARY: return 50;
+    case Rarity.COMMON: return 10;
+    case Rarity.UNCOMMON: return 20;
+    case Rarity.RARE: return 30;
+    case Rarity.EPIC: return 40;
+    case Rarity.LEGENDARY: return 50;
     default: return 10;
   }
 };

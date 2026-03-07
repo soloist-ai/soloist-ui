@@ -93,6 +93,20 @@ function AuthenticatedLayout({
   );
 }
 
+// Prefetch all tab chunks right after initial render so lazy navigation is instant
+function usePrefetchTabs() {
+  useEffect(() => {
+    const id = setTimeout(() => {
+      import('./tabs/ProfileTab');
+      import('./tabs/BalanceTab');
+      import('./tabs/MenuTab');
+      import('./tabs/WelcomeTab');
+      import('./tabs/StreakCalendarTab');
+    }, 100);
+    return () => clearTimeout(id);
+  }, []);
+}
+
 function AppRoutes() {
   const location = useLocation();
   const { isBottomBarVisible } = useModal();
@@ -101,7 +115,9 @@ function AppRoutes() {
   const { t } = useLocalization();
   const { isUpdateAvailable, reason: updateReason, refreshNow } = useUiUpdate();
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
-  
+
+  usePrefetchTabs();
+
   // Инициализируем Telegram WebApp
   useTelegram();
   

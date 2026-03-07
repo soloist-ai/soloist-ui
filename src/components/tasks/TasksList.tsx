@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useLocalization } from '../../hooks/useLocalization';
 import { gqlSdk } from '../../graphql/client';
 import Icon from '../common/Icon';
-import type { PlayerTask, PlayerTaskStatus, LocalizedField, Stamina } from '../../api';
+import type { PlayerTask, PlayerTaskStatus, LocalizedField, Stamina } from '../../graphql/generated';
 import { OrderMode } from '../../graphql/generated';
 import TasksGrid from './TasksGrid';
 import TaskCardSkeleton from './TaskCardSkeleton';
@@ -42,7 +42,7 @@ const TasksList: React.FC<TasksListProps> = ({
   // Используем переданные фильтры или значения по умолчанию
   const dateFilters = useMemo(() => propDateFilters || { from: '', to: '' }, [propDateFilters]);
   const enumFilters = useMemo(() => propEnumFilters || {}, [propEnumFilters]);
-  const sorts = useMemo(() => [{ field: 'updatedAt', mode: OrderMode.Desc }], []);
+  const sorts = useMemo(() => [{ field: 'updatedAt', mode: OrderMode.DESC }], []);
   
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
@@ -112,7 +112,7 @@ const TasksList: React.FC<TasksListProps> = ({
       });
 
       const { tasks: newTasks, paging } = result.me.player.closedTasks;
-      const hasMoreData = newTasks.length > 0 && (paging?.hasMore || false);
+      const hasMoreData = paging != null && paging.currentPage < paging.totalPageCount - 1;
 
       if (paging?.totalRowCount !== undefined) {
         setTotalCount(paging.totalRowCount);

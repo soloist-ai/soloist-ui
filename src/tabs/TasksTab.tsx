@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, startTransition } from 'react';
-import type { PlayerTask, Stamina } from '../api';
+import type { PlayerTask, Stamina } from '../graphql/generated';
 import { gqlSdk } from '../graphql/client';
 import { useLocalization } from '../hooks/useLocalization';
 import { useTasksRefresh } from '../hooks/useTasksRefresh';
@@ -41,12 +41,11 @@ const TasksTab: React.FC<TasksTabProps> = ({ isAuthenticated }) => {
   const fetchAndUpdateTasks = useCallback(async () => {
     const { me: res } = await gqlSdk.RefreshActiveTasks();
     const { activeTasks, stamina: s } = res.player;
-    const mapped = activeTasks.tasks as unknown as PlayerTask[];
-    setTasks(mapped);
-    setStamina(s as Stamina);
+    setTasks(activeTasks.tasks);
+    setStamina(s);
     setFirstTime(activeTasks.isFirstTime);
     setLoading(false);
-    return { tasks: mapped, stamina: s as Stamina, isFirstTime: activeTasks.isFirstTime };
+    return { tasks: activeTasks.tasks, stamina: s, isFirstTime: activeTasks.isFirstTime };
   }, []);
 
   // Функция для обновления списка задач и стамины
@@ -102,7 +101,7 @@ const TasksTab: React.FC<TasksTabProps> = ({ isAuthenticated }) => {
     const syncStamina = () => {
       gqlSdk.RefreshActiveTasks()
         .then(({ me: res }) => {
-          if (res.player.stamina) setStamina(res.player.stamina as Stamina);
+          if (res.player.stamina) setStamina(res.player.stamina);
         })
         .catch(() => { /* тихо игнорируем ошибки синка */ });
     };

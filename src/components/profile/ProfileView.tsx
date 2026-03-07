@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSettings } from '../../hooks/useSettings';
 import { useLocalization } from '../../hooks/useLocalization';
-import type { User } from '../../api';
+import type { User } from '../../graphql/generated';
 import SettingsDialog from '../dialogs/SettingsDialog';
 import Icon from '../common/Icon';
 import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';

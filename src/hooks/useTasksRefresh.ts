@@ -1,7 +1,7 @@
 import { useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { gqlSdk } from '../graphql/client';
-import type { PlayerTask, Stamina } from '../api';
+import type { PlayerTask, Stamina } from '../graphql/generated';
 
 interface UseTasksRefreshProps {
   isAuthenticated: boolean;
@@ -17,7 +17,7 @@ export const useTasksRefresh = ({ isAuthenticated, onTasksUpdate }: UseTasksRefr
     try {
       const { me } = await gqlSdk.RefreshActiveTasks();
       const { activeTasks, stamina } = me.player;
-      onTasksUpdate(activeTasks.tasks as unknown as PlayerTask[], stamina as Stamina);
+      onTasksUpdate(activeTasks.tasks, stamina);
     } catch (error) {
       console.error('Error refreshing tasks:', error);
     }

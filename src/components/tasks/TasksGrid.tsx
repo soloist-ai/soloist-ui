@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-import type { PlayerTask, Stamina } from '../../api';
-import { PlayerTaskStatus } from '../../api';
+import type { PlayerTask, Stamina } from '../../graphql/generated';
+import { PlayerTaskStatus } from '../../graphql/generated';
 import TaskCard from './TaskCard';
 import TaskCardSkeleton from './TaskCardSkeleton';
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import type { PlayerDailyTask } from '../../api';
+import type { PlayerDailyTask } from '../../graphql/generated';
 import Icon from '../common/Icon';
 import { useLocalization } from '../../hooks/useLocalization';
 

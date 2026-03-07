@@ -4,7 +4,7 @@ import type { SdkFunctionWrapper } from './generated';
 import { auth } from '../auth';
 import { getLanguageFromStorage } from '../hooks/useSettings';
 import { apiBaseUrl, useMocks } from '../config/environment';
-import { LeaderboardType } from '../api';
+import { LeaderboardType } from './generated';
 
 const GRAPHQL_URL = `${apiBaseUrl}/graphql`;
 
@@ -86,63 +86,11 @@ async function handleGraphqlMock(operationName: string, variables?: Record<strin
         },
       };
     }
-    case 'RefreshPlayerStats': {
-      const data = await mockUserService.getCurrentUser();
-      const balanceData = await mockPlayerService.getPlayerBalance();
-      const u = data.user;
-      return {
-        me: {
-          player: {
-            agility: u.player.agility,
-            strength: u.player.strength,
-            intelligence: u.player.intelligence,
-            level: u.player.level,
-            balance: balanceData.balance
-              ? { id: balanceData.balance.id, amount: balanceData.balance.balance }
-              : null,
-          },
-        },
-      };
-    }
-    case 'RefreshTaskTopics': {
-      const data = await mockPlayerService.getCurrentPlayerTopics();
-      return {
-        me: {
-          player: { taskTopics: { topics: data.playerTaskTopics } },
-        },
-      };
-    }
     case 'RefreshDayStreak': {
       const data = await mockUserService.getUserAdditionalInfo();
       return {
         me: {
           player: { dayStreak: data.dayStreak },
-        },
-      };
-    }
-    case 'GetCurrentUser': {
-      const data = await mockUserService.getCurrentUser();
-      const u = data.user;
-      return {
-        me: {
-          id: u.id,
-          username: u.username,
-          firstName: u.firstName,
-          lastName: u.lastName,
-          photoUrl: u.photoUrl,
-          locale: u.locale ? { tag: String(u.locale), isManual: false } : null,
-          roles: [],
-          player: {
-            id: u.player.id,
-            agility: u.player.agility,
-            strength: u.player.strength,
-            intelligence: u.player.intelligence,
-            level: u.player.level,
-            balance: u.player.balance
-              ? { id: u.player.balance.id, amount: u.player.balance.balance }
-              : null,
-            stamina: null,
-          },
         },
       };
     }
@@ -195,35 +143,12 @@ async function handleGraphqlMock(operationName: string, variables?: Record<strin
         },
       };
     }
-    case 'GetUserTopics': {
-      const data = await mockPlayerService.getCurrentPlayerTopics();
-      return {
-        me: {
-          player: {
-            taskTopics: { topics: data.playerTaskTopics },
-          },
-        },
-      };
-    }
     case 'GetPlayerTopics': {
       const data = await mockPlayerService.getCurrentPlayerTopics();
       return {
         me: {
           player: {
             taskTopics: { topics: data.playerTaskTopics },
-          },
-        },
-      };
-    }
-    case 'GetPlayerBalance': {
-      const data = await mockPlayerService.getPlayerBalance();
-      return {
-        me: {
-          player: {
-            balance: {
-              id: data.balance.id,
-              amount: data.balance.balance,
-            },
           },
         },
       };
@@ -295,15 +220,6 @@ async function handleGraphqlMock(operationName: string, variables?: Record<strin
       );
       return { usersLeaderboard: data };
     }
-    case 'GetUserLeaderboard': {
-      const filter = variables?.filter as { type?: string; range?: unknown } | undefined;
-      const type = (filter?.type as keyof typeof LeaderboardType) ?? 'TASKS';
-      const data = await mockUserService.getUserLeaderboard(
-        LeaderboardType[type],
-        { range: filter?.range as any }
-      );
-      return { userLeaderboard: data.user };
-    }
     case 'GetLeaderboardInitial': {
       const filter = variables?.filter as { type?: string; range?: unknown } | undefined;
       const page = (variables?.paging as { page?: number })?.page;
@@ -337,17 +253,6 @@ async function handleGraphqlMock(operationName: string, variables?: Record<strin
           player: {
             dailyTasks: { tasks: data.tasks },
           },
-        },
-      };
-    }
-    case 'GetUserAdditionalInfo': {
-      const data = await mockUserService.getUserAdditionalInfo();
-      return {
-        me: {
-          photoUrl: data.photoUrl,
-          locale: data.locale,
-          roles: data.roles,
-          player: { dayStreak: data.dayStreak },
         },
       };
     }

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useLocalization } from '../hooks/useLocalization';
 import { useTelegramWebApp } from '../hooks/useTelegram';
-import { LeaderboardType } from '../api';
+import { LeaderboardType } from '../graphql/generated';
 import Icon, { IconType } from '../components/common/Icon';
 import LeaderboardView from '../components/leaderboard/LeaderboardView';
 import UserProfileView from '../components/profile/UserProfileView';

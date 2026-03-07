@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
-import type { DayStreak } from '../../api';
+import type { DayStreak } from '../../graphql/generated';
 import { gqlSdk } from '../../graphql/client';
 import Icon from '../common/Icon';
 import { useLocalization } from '../../hooks/useLocalization';

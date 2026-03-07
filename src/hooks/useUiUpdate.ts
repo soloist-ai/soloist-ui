@@ -35,14 +35,24 @@ function isChunkLoadError(err: unknown): boolean {
   const message = anyErr?.message ? String(anyErr.message) : '';
   const stack = anyErr?.stack ? String(anyErr.stack) : '';
 
-  // CRA / webpack typical patterns
-  return (
+  // webpack / CRA patterns
+  if (
     name.includes('ChunkLoadError') ||
     message.includes('ChunkLoadError') ||
     message.includes('Loading chunk') ||
     stack.includes('ChunkLoadError') ||
     stack.includes('Loading chunk')
-  );
+  ) return true;
+
+  // Vite dynamic import failure patterns
+  if (
+    message.includes('Failed to fetch dynamically imported module') ||
+    message.includes('Importing a module script failed') ||
+    message.includes('Unable to preload CSS') ||
+    message.includes('error loading dynamically imported module')
+  ) return true;
+
+  return false;
 }
 
 export function useUiUpdate(pollIntervalMs: number = DEFAULT_POLL_INTERVAL_MS) {

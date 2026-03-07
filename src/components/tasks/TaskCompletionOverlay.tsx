@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import type { CompleteTaskResponse, Task, TaskTopic } from '../../api';
+import type { Task, TaskTopic } from '../../graphql/generated';
+import type { CompleteTaskResult } from '../../services/taskActions';
 import { useLocalization } from '../../hooks/useLocalization';
 import Icon from '../common/Icon';
 import TopicIcon from './TopicIcons';
@@ -9,7 +10,7 @@ import { useFullscreenOverlay } from '../../hooks/useFullscreenOverlay';
 import { useScrollLock } from '../../hooks/useScrollLock';
 
 type TaskCompletionOverlayProps = {
-  response: CompleteTaskResponse;
+  response: CompleteTaskResult;
   completedTask?: Task;
   onClose: () => void;
   isOpen: boolean;
@@ -535,10 +536,10 @@ const TaskCompletionOverlay: React.FC<TaskCompletionOverlayProps> = ({ response,
                 </div>
                 <div className="mb-2">
                   <div className="text-xl font-tech font-bold mb-0.5" style={{ color: '#e8f4f8', textShadow: '0 0 12px rgba(180, 220, 240, 0.4)' }}>
-                    {playerAfter.balance?.balance?.amount || 0}
+                    {playerAfter.balance?.amount.amount || 0}
                   </div>
                   <div className="text-[11px] font-tech font-semibold" style={{ color: 'rgba(180, 220, 240, 0.8)', textShadow: '0 0 6px rgba(180, 220, 240, 0.3)' }}>
-                    {playerAfter.balance?.balance?.currencyCode || 'SLCN'}
+                    {playerAfter.balance?.amount.currencyCode || 'SLCN'}
                   </div>
                 </div>
                 <div

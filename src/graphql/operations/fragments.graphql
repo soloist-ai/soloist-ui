@@ -54,6 +54,14 @@ fragment PlayerTaskFields on PlayerTask {
   }
 }
 
+fragment PlayerDailyTaskFields on PlayerDailyTask {
+  id
+  title
+  progress
+  goal
+  isCompleted
+}
+
 fragment PlayerTaskTopicFields on PlayerTaskTopic {
   id
   version
@@ -69,7 +77,48 @@ fragment ResponsePagingFields on ResponsePaging {
   totalRowCount
   totalPageCount
   currentPage
-  hasMore
+  currentPageSize
+}
+
+fragment LeaderboardUserFields on LeaderboardUser {
+  id
+  firstName
+  lastName
+  photoUrl
+  score
+  position
+}
+
+fragment BalanceTransactionFields on BalanceTransaction {
+  id
+  amount {
+    ...MoneyFields
+  }
+  type
+  cause
+  createdAt
+}
+
+fragment UserProfileFields on User {
+  id
+  username
+  firstName
+  lastName
+  photoUrl
+  roles
+  locale {
+    tag
+    isManual
+  }
+  player {
+    id
+    agility
+    strength
+    intelligence
+    level {
+      ...LevelFields
+    }
+  }
 }
 
 fragment CompleteTaskPlayerFields on CompleteTaskPlayer {

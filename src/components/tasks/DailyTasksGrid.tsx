@@ -1,5 +1,5 @@
 import React from 'react';
-import type { PlayerDailyTask } from '../../api';
+import type { PlayerDailyTask } from '../../graphql/generated';
 import DailyTaskCard from './DailyTaskCard';
 import DailyTaskCardSkeleton from './DailyTaskCardSkeleton';
 import { useLocalization } from '../../hooks/useLocalization';

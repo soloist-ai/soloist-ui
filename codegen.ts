@@ -26,6 +26,9 @@ const config: CodegenConfig = {
       config: {
         rawRequest: false,
         inlineFragmentTypes: 'combine',
+        namingConvention: {
+          enumValues: 'keep',
+        },
         scalars: {
           UUID: 'string',
           Long: 'number',

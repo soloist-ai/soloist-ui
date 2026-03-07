@@ -812,8 +812,6 @@ export const mockPlayerService = {
       const startIndex = currentPage * pageSize;
       const endIndex = startIndex + pageSize;
       const paginatedTransactions = filteredTransactions.slice(startIndex, endIndex);
-      const hasMore = endIndex < filteredTransactions.length;
-      
       // Моковые доступные фильтры
       const mockFilters: LocalizedField[] = [
         {
@@ -842,7 +840,7 @@ export const mockPlayerService = {
           totalRowCount: filteredTransactions.length,
           totalPageCount: Math.ceil(filteredTransactions.length / pageSize),
           currentPage: currentPage,
-          hasMore: hasMore,
+          currentPageSize: paginatedTransactions.length,
         },
         options: {
           filters: mockFilters,
@@ -961,9 +959,6 @@ export const mockPlayerService = {
       const startIndex = currentPage * pageSize;
       const endIndex = startIndex + pageSize;
       const paginatedTasks = filteredTasks.slice(startIndex, endIndex);
-      const hasMore = endIndex < filteredTasks.length;
-      
-      
       // Моковые доступные фильтры (можно расширить)
       const mockFilters: LocalizedField[] = [
         {
@@ -1003,7 +998,7 @@ export const mockPlayerService = {
           totalRowCount: filteredTasks.length,
           totalPageCount: Math.ceil(filteredTasks.length / pageSize),
           currentPage: currentPage,
-          hasMore: hasMore,
+          currentPageSize: paginatedTasks.length,
         },
         options: {
           filters: mockFilters,

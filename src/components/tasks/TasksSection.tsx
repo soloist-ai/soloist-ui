@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import type { PlayerTask, CompleteTaskResponse, LocalizedField, Stamina } from '../../api';
-import { PlayerTaskStatus as TaskStatus } from '../../api';
-import type { PlayerDailyTask } from '../../api';
+import type { PlayerTask, LocalizedField, Stamina, PlayerDailyTask } from '../../graphql/generated';
+import { PlayerTaskStatus as TaskStatus } from '../../graphql/generated';
+import type { CompleteTaskResult } from '../../services/taskActions';
 import TasksGrid from './TasksGrid';
 import TasksList from './TasksList';
 import TaskCardSkeleton from './TaskCardSkeleton';
@@ -53,7 +53,7 @@ const TasksSection: React.FC<TasksSectionProps> = ({
     }
   }, [initialViewMode]);
   const [dialogTask, setDialogTask] = useState<PlayerTask | null>(null);
-  const [completionResponse, setCompletionResponse] = useState<CompleteTaskResponse | null>(null);
+  const [completionResponse, setCompletionResponse] = useState<CompleteTaskResult | null>(null);
   const [completedTask, setCompletedTask] = useState<PlayerTask | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [confirmAction, setConfirmAction] = useState<{
@@ -85,7 +85,7 @@ const TasksSection: React.FC<TasksSectionProps> = ({
     if (viewMode !== 'daily') return;
     setDailyLoading(true);
     gqlSdk.GetDailyTasks()
-      .then(({ me }) => setDailyTasks((me.player.dailyTasks?.tasks ?? []) as any))
+      .then(({ me }) => setDailyTasks(me.player.dailyTasks?.tasks ?? []))
       .catch(() => setDailyTasks([]))
       .finally(() => setDailyLoading(false));
   }, [viewMode]);
@@ -118,7 +118,7 @@ const TasksSection: React.FC<TasksSectionProps> = ({
         setTimeout(() => {
           gqlSdk.RefreshActiveTasks().then(({ me }) => {
             const { activeTasks, stamina: s } = me.player;
-            onTasksUpdate(activeTasks.tasks as any, s as any);
+            onTasksUpdate(activeTasks.tasks, s);
           }).catch(() => {});
         }, 100);
       }
@@ -154,7 +154,7 @@ const TasksSection: React.FC<TasksSectionProps> = ({
         setTimeout(() => {
           gqlSdk.RefreshActiveTasks().then(({ me }) => {
             const { activeTasks, stamina: s } = me.player;
-            onTasksUpdate(activeTasks.tasks as any, s as any);
+            onTasksUpdate(activeTasks.tasks, s);
           }).catch(() => {});
         }, 100);
       }

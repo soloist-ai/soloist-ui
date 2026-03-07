@@ -489,7 +489,7 @@ export const mockSearchPlayerTasksResponse: SearchPlayerTasksResponse = {
     totalRowCount: 2,
     totalPageCount: 1,
     currentPage: 0,
-    hasMore: false,
+    currentPageSize: 2,
   },
   options: {},
 };
@@ -500,7 +500,7 @@ export const mockSearchPlayerBalanceTransactionsResponse: SearchPlayerBalanceTra
     totalRowCount: mockTransactions.length,
     totalPageCount: 1,
     currentPage: 0,
-    hasMore: false,
+    currentPageSize: mockTransactions.length,
   },
   options: {},
 };
@@ -537,15 +537,13 @@ export const createMockLeaderboardResponse = (
   const offset = page * pageSize;
   const users = generateMockLeaderboardUsers(Math.min(pageSize, totalUsers - offset), offset);
   const totalPages = Math.ceil(totalUsers / pageSize);
-  const hasMore = offset + pageSize < totalUsers;
-  
   return {
     users,
     paging: {
       totalRowCount: totalUsers,
       totalPageCount: totalPages,
       currentPage: page,
-      hasMore,
+      currentPageSize: users.length,
     },
   };
 };

@@ -11,7 +11,7 @@ import MusicIcon from '../../assets/icons/music.svg?react';
 import GamepadIcon from '../../assets/icons/gamepad-2.svg?react';
 import CodeIcon from '../../assets/icons/code.svg?react';
 import LanguagesIcon from '../../assets/icons/languages.svg?react';
-import { TaskTopic } from '../../api';
+import { TaskTopic } from '../../graphql/generated';
 
 interface TopicIconProps {
   topic: TaskTopic;

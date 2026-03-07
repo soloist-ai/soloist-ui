@@ -57,13 +57,6 @@ export const config: EnvironmentConfig = currentEnv === 'production' ? productio
 if (typeof window !== 'undefined') {
   if (config.isProduction) {
     (config as any).useMocks = false;
-  } else if (config.isDevelopment && !config.useMocks) {
-    // initData is empty outside a real Telegram session, even though the SDK always
-    // creates window.Telegram.WebApp. Use that as the authoritative mock signal.
-    const hasTelegramAuth = !!(window as any).Telegram?.WebApp?.initData;
-    if (!hasTelegramAuth) {
-      (config as any).useMocks = true;
-    }
   }
 }
 

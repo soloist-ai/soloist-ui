@@ -60,15 +60,15 @@ export type BalanceTransaction = {
 };
 
 export enum BalanceTransactionCause {
-  DailyCheckIn = 'DAILY_CHECK_IN',
-  ItemPurchase = 'ITEM_PURCHASE',
-  LevelUp = 'LEVEL_UP',
-  TaskCompletion = 'TASK_COMPLETION'
+  DAILY_CHECK_IN = 'DAILY_CHECK_IN',
+  ITEM_PURCHASE = 'ITEM_PURCHASE',
+  LEVEL_UP = 'LEVEL_UP',
+  TASK_COMPLETION = 'TASK_COMPLETION'
 }
 
 export enum BalanceTransactionType {
-  In = 'IN',
-  Out = 'OUT'
+  IN = 'IN',
+  OUT = 'OUT'
 }
 
 export type ClosedPlayerTasksResult = {
@@ -140,9 +140,9 @@ export type LeaderboardFilterInput = {
 };
 
 export enum LeaderboardType {
-  Balance = 'BALANCE',
-  Level = 'LEVEL',
-  Tasks = 'TASKS'
+  BALANCE = 'BALANCE',
+  LEVEL = 'LEVEL',
+  TASKS = 'TASKS'
 }
 
 export type LeaderboardUser = {
@@ -219,8 +219,8 @@ export type MutationUpdateUserLocaleArgs = {
 };
 
 export enum OrderMode {
-  Asc = 'ASC',
-  Desc = 'DESC'
+  ASC = 'ASC',
+  DESC = 'DESC'
 }
 
 export type PagingInput = {
@@ -277,10 +277,10 @@ export type PlayerTask = {
 };
 
 export enum PlayerTaskStatus {
-  Completed = 'COMPLETED',
-  InProgress = 'IN_PROGRESS',
-  Preparing = 'PREPARING',
-  Skipped = 'SKIPPED'
+  COMPLETED = 'COMPLETED',
+  IN_PROGRESS = 'IN_PROGRESS',
+  PREPARING = 'PREPARING',
+  SKIPPED = 'SKIPPED'
 }
 
 export type PlayerTaskTopic = {
@@ -330,17 +330,17 @@ export type QueryUsersLeaderboardArgs = {
 };
 
 export enum Rarity {
-  Common = 'COMMON',
-  Epic = 'EPIC',
-  Legendary = 'LEGENDARY',
-  Rare = 'RARE',
-  Uncommon = 'UNCOMMON'
+  COMMON = 'COMMON',
+  EPIC = 'EPIC',
+  LEGENDARY = 'LEGENDARY',
+  RARE = 'RARE',
+  UNCOMMON = 'UNCOMMON'
 }
 
 export type ResponsePaging = {
   __typename?: 'ResponsePaging';
   currentPage: Scalars['Int']['output'];
-  hasMore: Scalars['Boolean']['output'];
+  currentPageSize: Scalars['Int']['output'];
   totalPageCount: Scalars['Long']['output'];
   totalRowCount: Scalars['Long']['output'];
 };
@@ -395,18 +395,18 @@ export type Task = {
 };
 
 export enum TaskTopic {
-  Adventure = 'ADVENTURE',
-  Brain = 'BRAIN',
-  Creativity = 'CREATIVITY',
-  Cybersport = 'CYBERSPORT',
-  Development = 'DEVELOPMENT',
-  LanguageLearning = 'LANGUAGE_LEARNING',
-  Music = 'MUSIC',
-  Nutrition = 'NUTRITION',
-  PhysicalActivity = 'PHYSICAL_ACTIVITY',
-  Productivity = 'PRODUCTIVITY',
-  Reading = 'READING',
-  SocialSkills = 'SOCIAL_SKILLS'
+  ADVENTURE = 'ADVENTURE',
+  BRAIN = 'BRAIN',
+  CREATIVITY = 'CREATIVITY',
+  CYBERSPORT = 'CYBERSPORT',
+  DEVELOPMENT = 'DEVELOPMENT',
+  LANGUAGE_LEARNING = 'LANGUAGE_LEARNING',
+  MUSIC = 'MUSIC',
+  NUTRITION = 'NUTRITION',
+  PHYSICAL_ACTIVITY = 'PHYSICAL_ACTIVITY',
+  PRODUCTIVITY = 'PRODUCTIVITY',
+  READING = 'READING',
+  SOCIAL_SKILLS = 'SOCIAL_SKILLS'
 }
 
 export type User = {
@@ -433,10 +433,10 @@ export type UserLocaleInput = {
 };
 
 export enum UserRole {
-  Admin = 'ADMIN',
-  Developer = 'DEVELOPER',
-  Manager = 'MANAGER',
-  User = 'USER'
+  ADMIN = 'ADMIN',
+  DEVELOPER = 'DEVELOPER',
+  MANAGER = 'MANAGER',
+  USER = 'USER'
 }
 
 export type UsersLeaderboardResult = {
@@ -460,12 +460,26 @@ export type PlayerTaskFieldsFragment = { __typename?: 'PlayerTask', id: string, 
     & TaskFieldsFragment
   ) };
 
+export type PlayerDailyTaskFieldsFragment = { __typename?: 'PlayerDailyTask', id: string, title: string, progress: string, goal: string, isCompleted: boolean };
+
 export type PlayerTaskTopicFieldsFragment = { __typename?: 'PlayerTaskTopic', id: string, version: number, isActive: boolean, taskTopic: TaskTopic, isDisabled: boolean, level: (
     { __typename?: 'Level' }
     & LevelFieldsFragment
   ) };
 
-export type ResponsePagingFieldsFragment = { __typename?: 'ResponsePaging', totalRowCount: number, totalPageCount: number, currentPage: number, hasMore: boolean };
+export type ResponsePagingFieldsFragment = { __typename?: 'ResponsePaging', totalRowCount: number, totalPageCount: number, currentPage: number, currentPageSize: number };
+
+export type LeaderboardUserFieldsFragment = { __typename?: 'LeaderboardUser', id: number, firstName: string, lastName?: string | null, photoUrl?: string | null, score: string, position: number };
+
+export type BalanceTransactionFieldsFragment = { __typename?: 'BalanceTransaction', id: string, type: BalanceTransactionType, cause: BalanceTransactionCause, createdAt: string, amount: (
+    { __typename?: 'Money' }
+    & MoneyFieldsFragment
+  ) };
+
+export type UserProfileFieldsFragment = { __typename?: 'User', id: number, username?: string | null, firstName: string, lastName?: string | null, photoUrl?: string | null, roles: Array<UserRole>, locale?: { __typename?: 'UserLocale', tag: string, isManual: boolean } | null, player: { __typename?: 'Player', id: number, agility: number, strength: number, intelligence: number, level: (
+      { __typename?: 'Level' }
+      & LevelFieldsFragment
+    ) } };
 
 export type CompleteTaskPlayerFieldsFragment = { __typename?: 'CompleteTaskPlayer', id: number, agility: number, strength: number, intelligence: number, level: (
     { __typename?: 'Level' }
@@ -547,10 +561,10 @@ export type RefreshDayStreakQuery = { __typename?: 'Query', me: { __typename?: '
 export type GetUserProfileQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetUserProfileQuery = { __typename?: 'Query', me: { __typename?: 'User', id: number, username?: string | null, firstName: string, lastName?: string | null, photoUrl?: string | null, roles: Array<UserRole>, locale?: { __typename?: 'UserLocale', tag: string, isManual: boolean } | null, player: { __typename?: 'Player', id: number, agility: number, strength: number, intelligence: number, level: (
-        { __typename?: 'Level' }
-        & LevelFieldsFragment
-      ) } } };
+export type GetUserProfileQuery = { __typename?: 'Query', me: (
+    { __typename?: 'User' }
+    & UserProfileFieldsFragment
+  ) };
 
 export type GetPlayerTopicsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -569,10 +583,10 @@ export type GetBalanceWithTransactionsQueryVariables = Exact<{
 export type GetBalanceWithTransactionsQuery = { __typename?: 'Query', me: { __typename?: 'User', player: { __typename?: 'Player', balance: { __typename?: 'Balance', id: string, amount: (
           { __typename?: 'Money' }
           & MoneyFieldsFragment
-        ), transactions: { __typename?: 'SearchBalanceTransactionsResult', transactions: Array<{ __typename?: 'BalanceTransaction', id: string, type: BalanceTransactionType, cause: BalanceTransactionCause, createdAt: string, amount: (
-              { __typename?: 'Money' }
-              & MoneyFieldsFragment
-            ) }>, paging: (
+        ), transactions: { __typename?: 'SearchBalanceTransactionsResult', transactions: Array<(
+            { __typename?: 'BalanceTransaction' }
+            & BalanceTransactionFieldsFragment
+          )>, paging: (
             { __typename?: 'ResponsePaging' }
             & ResponsePagingFieldsFragment
           ) } } } } };
@@ -583,23 +597,29 @@ export type GetLeaderboardInitialQueryVariables = Exact<{
 }>;
 
 
-export type GetLeaderboardInitialQuery = { __typename?: 'Query', usersLeaderboard: { __typename?: 'UsersLeaderboardResult', users: Array<{ __typename?: 'LeaderboardUser', id: number, firstName: string, lastName?: string | null, photoUrl?: string | null, score: string, position: number }>, paging: (
+export type GetLeaderboardInitialQuery = { __typename?: 'Query', usersLeaderboard: { __typename?: 'UsersLeaderboardResult', users: Array<(
+      { __typename?: 'LeaderboardUser' }
+      & LeaderboardUserFieldsFragment
+    )>, paging: (
       { __typename?: 'ResponsePaging' }
       & ResponsePagingFieldsFragment
-    ) }, userLeaderboard: { __typename?: 'LeaderboardUser', id: number, firstName: string, lastName?: string | null, photoUrl?: string | null, score: string, position: number } };
+    ) }, userLeaderboard: (
+    { __typename?: 'LeaderboardUser' }
+    & LeaderboardUserFieldsFragment
+  ) };
 
 export type GetUserByIdQueryVariables = Exact<{
   id: Scalars['Long']['input'];
 }>;
 
 
-export type GetUserByIdQuery = { __typename?: 'Query', user: { __typename?: 'User', id: number, username?: string | null, firstName: string, lastName?: string | null, photoUrl?: string | null, roles: Array<UserRole>, locale?: { __typename?: 'UserLocale', tag: string, isManual: boolean } | null, player: { __typename?: 'Player', id: number, agility: number, strength: number, intelligence: number, level: (
-        { __typename?: 'Level' }
-        & LevelFieldsFragment
-      ), balance: { __typename?: 'Balance', id: string, amount: (
+export type GetUserByIdQuery = { __typename?: 'Query', user: (
+    { __typename?: 'User', player: { __typename?: 'Player', balance: { __typename?: 'Balance', id: string, amount: (
           { __typename?: 'Money' }
           & MoneyFieldsFragment
-        ) } } } };
+        ) } } }
+    & UserProfileFieldsFragment
+  ) };
 
 export type GetMonthlyActivityQueryVariables = Exact<{
   year: Scalars['Int']['input'];
@@ -612,7 +632,10 @@ export type GetMonthlyActivityQuery = { __typename?: 'Query', me: { __typename?:
 export type GetDailyTasksQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetDailyTasksQuery = { __typename?: 'Query', me: { __typename?: 'User', player: { __typename?: 'Player', dailyTasks: { __typename?: 'DailyTasksResult', tasks: Array<{ __typename?: 'PlayerDailyTask', id: string, title: string, progress: string, goal: string, isCompleted: boolean }> } } } };
+export type GetDailyTasksQuery = { __typename?: 'Query', me: { __typename?: 'User', player: { __typename?: 'Player', dailyTasks: { __typename?: 'DailyTasksResult', tasks: Array<(
+          { __typename?: 'PlayerDailyTask' }
+          & PlayerDailyTaskFieldsFragment
+        )> } } } };
 
 export type GetBalanceTransactionsQueryVariables = Exact<{
   paging: PagingInput;
@@ -620,10 +643,10 @@ export type GetBalanceTransactionsQueryVariables = Exact<{
 }>;
 
 
-export type GetBalanceTransactionsQuery = { __typename?: 'Query', me: { __typename?: 'User', player: { __typename?: 'Player', balance: { __typename?: 'Balance', transactions: { __typename?: 'SearchBalanceTransactionsResult', transactions: Array<{ __typename?: 'BalanceTransaction', id: string, type: BalanceTransactionType, cause: BalanceTransactionCause, createdAt: string, amount: (
-              { __typename?: 'Money' }
-              & MoneyFieldsFragment
-            ) }>, paging: (
+export type GetBalanceTransactionsQuery = { __typename?: 'Query', me: { __typename?: 'User', player: { __typename?: 'Player', balance: { __typename?: 'Balance', transactions: { __typename?: 'SearchBalanceTransactionsResult', transactions: Array<(
+            { __typename?: 'BalanceTransaction' }
+            & BalanceTransactionFieldsFragment
+          )>, paging: (
             { __typename?: 'ResponsePaging' }
             & ResponsePagingFieldsFragment
           ) } } } } };
@@ -648,7 +671,10 @@ export type GetUsersLeaderboardQueryVariables = Exact<{
 }>;
 
 
-export type GetUsersLeaderboardQuery = { __typename?: 'Query', usersLeaderboard: { __typename?: 'UsersLeaderboardResult', users: Array<{ __typename?: 'LeaderboardUser', id: number, firstName: string, lastName?: string | null, photoUrl?: string | null, score: string, position: number }>, paging: (
+export type GetUsersLeaderboardQuery = { __typename?: 'Query', usersLeaderboard: { __typename?: 'UsersLeaderboardResult', users: Array<(
+      { __typename?: 'LeaderboardUser' }
+      & LeaderboardUserFieldsFragment
+    )>, paging: (
       { __typename?: 'ResponsePaging' }
       & ResponsePagingFieldsFragment
     ) } };
@@ -699,14 +725,50 @@ export const PlayerTaskFieldsFragmentDoc = gql`
   }
 }
     ${TaskFieldsFragmentDoc}`;
+export const PlayerDailyTaskFieldsFragmentDoc = gql`
+    fragment PlayerDailyTaskFields on PlayerDailyTask {
+  id
+  title
+  progress
+  goal
+  isCompleted
+}
+    `;
 export const ResponsePagingFieldsFragmentDoc = gql`
     fragment ResponsePagingFields on ResponsePaging {
   totalRowCount
   totalPageCount
   currentPage
-  hasMore
+  currentPageSize
 }
     `;
+export const LeaderboardUserFieldsFragmentDoc = gql`
+    fragment LeaderboardUserFields on LeaderboardUser {
+  id
+  firstName
+  lastName
+  photoUrl
+  score
+  position
+}
+    `;
+export const MoneyFieldsFragmentDoc = gql`
+    fragment MoneyFields on Money {
+  currencyCode
+  amount
+}
+    `;
+export const BalanceTransactionFieldsFragmentDoc = gql`
+    fragment BalanceTransactionFields on BalanceTransaction {
+  id
+  amount {
+    ...MoneyFields
+  }
+  type
+  cause
+  createdAt
+}
+    ${MoneyFieldsFragmentDoc}`;
 export const LevelFieldsFragmentDoc = gql`
     fragment LevelFields on Level {
   id
@@ -717,12 +779,29 @@ export const LevelFieldsFragmentDoc = gql`
   assessment
 }
     `;
-export const MoneyFieldsFragmentDoc = gql`
-    fragment MoneyFields on Money {
-  currencyCode
-  amount
+export const UserProfileFieldsFragmentDoc = gql`
+    fragment UserProfileFields on User {
+  id
+  username
+  firstName
+  lastName
+  photoUrl
+  roles
+  locale {
+    tag
+    isManual
+  }
+  player {
+    id
+    agility
+    strength
+    intelligence
+    level {
+      ...LevelFields
+    }
+  }
 }
-    `;
+    ${LevelFieldsFragmentDoc}`;
 export const PlayerTaskTopicFieldsFragmentDoc = gql`
     fragment PlayerTaskTopicFields on PlayerTaskTopic {
   id
@@ -839,28 +918,10 @@ export const RefreshDayStreakDocument = gql`
 export const GetUserProfileDocument = gql`
     query GetUserProfile {
   me {
-    id
-    username
-    firstName
-    lastName
-    photoUrl
-    roles
-    locale {
-      tag
-      isManual
-    }
-    player {
-      id
-      agility
-      strength
-      intelligence
-      level {
-        ...LevelFields
-      }
-    }
+    ...UserProfileFields
   }
 }
-    ${LevelFieldsFragmentDoc}`;
+    ${UserProfileFieldsFragmentDoc}`;
 export const GetPlayerTopicsDocument = gql`
     query GetPlayerTopics {
   me {
@@ -885,13 +946,7 @@ export const GetBalanceWithTransactionsDocument = gql`
         }
         transactions(paging: $paging, options: $options) {
           transactions {
-            id
-            amount {
-              ...MoneyFields
-            }
-            type
-            cause
-            createdAt
+            ...BalanceTransactionFields
           }
           paging {
             ...ResponsePagingFields
@@ -902,53 +957,29 @@ export const GetBalanceWithTransactionsDocument = gql`
   }
 }
     ${MoneyFieldsFragmentDoc}
+${BalanceTransactionFieldsFragmentDoc}
 ${ResponsePagingFieldsFragmentDoc}`;
 export const GetLeaderboardInitialDocument = gql`
     query GetLeaderboardInitial($paging: PagingInput!, $filter: LeaderboardFilterInput!) {
   usersLeaderboard(paging: $paging, filter: $filter) {
     users {
-      id
-      firstName
-      lastName
-      photoUrl
-      score
-      position
+      ...LeaderboardUserFields
     }
     paging {
       ...ResponsePagingFields
     }
   }
   userLeaderboard(filter: $filter) {
-    id
-    firstName
-    lastName
-    photoUrl
-    score
-    position
+    ...LeaderboardUserFields
   }
 }
-    ${ResponsePagingFieldsFragmentDoc}`;
+    ${LeaderboardUserFieldsFragmentDoc}
+${ResponsePagingFieldsFragmentDoc}`;
 export const GetUserByIdDocument = gql`
     query GetUserById($id: Long!) {
   user(id: $id) {
-    id
-    username
-    firstName
-    lastName
-    photoUrl
-    locale {
-      tag
-      isManual
-    }
-    roles
+    ...UserProfileFields
     player {
-      id
-      agility
-      strength
-      intelligence
-      level {
-        ...LevelFields
-      }
       balance {
         id
         amount {
@@ -958,7 +989,7 @@ export const GetUserByIdDocument = gql`
     }
   }
 }
-    ${LevelFieldsFragmentDoc}
+    ${UserProfileFieldsFragmentDoc}
 ${MoneyFieldsFragmentDoc}`;
 export const GetMonthlyActivityDocument = gql`
     query GetMonthlyActivity($year: Int!, $month: Int!) {
@@ -977,17 +1008,13 @@ export const GetDailyTasksDocument = gql`
     player {
       dailyTasks {
         tasks {
-          id
-          title
-          progress
-          goal
-          isCompleted
+          ...PlayerDailyTaskFields
         }
       }
     }
   }
 }
-    `;
+    ${PlayerDailyTaskFieldsFragmentDoc}`;
 export const GetBalanceTransactionsDocument = gql`
     query GetBalanceTransactions($paging: PagingInput!, $options: SearchOptionsInput) {
   me {
@@ -995,13 +1022,7 @@ export const GetBalanceTransactionsDocument = gql`
       balance {
         transactions(paging: $paging, options: $options) {
           transactions {
-            id
-            amount {
-              ...MoneyFields
-            }
-            type
-            cause
-            createdAt
+            ...BalanceTransactionFields
           }
           paging {
             ...ResponsePagingFields
@@ -1011,7 +1032,7 @@ export const GetBalanceTransactionsDocument = gql`
     }
   }
 }
-    ${MoneyFieldsFragmentDoc}
+    ${BalanceTransactionFieldsFragmentDoc}
 ${ResponsePagingFieldsFragmentDoc}`;
 export const GetClosedTasksDocument = gql`
     query GetClosedTasks($paging: PagingInput!, $options: SearchOptionsInput) {
@@ -1034,19 +1055,15 @@ export const GetUsersLeaderboardDocument = gql`
     query GetUsersLeaderboard($paging: PagingInput!, $filter: LeaderboardFilterInput!) {
   usersLeaderboard(paging: $paging, filter: $filter) {
     users {
-      id
-      firstName
-      lastName
-      photoUrl
-      score
-      position
+      ...LeaderboardUserFields
     }
     paging {
       ...ResponsePagingFields
     }
   }
 }
-    ${ResponsePagingFieldsFragmentDoc}`;
+    ${LeaderboardUserFieldsFragmentDoc}
+${ResponsePagingFieldsFragmentDoc}`;
 
 export type SdkFunctionWrapper = <T>(action: (requestHeaders?:Record<string, string>) => Promise<T>, operationName: string, operationType?: string, variables?: any) => Promise<T>;
 

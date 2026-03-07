@@ -1,20 +1,141 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { TaskTopic, Assessment } from '../../api';
-import type { PlayerTaskTopic } from '../../api';
+import React, { useState, useEffect, useMemo, useCallback, useRef, memo } from 'react';
+import { TaskTopic, Assessment } from '../../graphql/generated';
+import type { PlayerTaskTopic } from '../../graphql/generated';
 import { gqlSdk } from '../../graphql/client';
 import TopicIcon from './TopicIcons';
 import { useLocalization } from '../../hooks/useLocalization';
 import { ExperienceProgressBar } from '../ui/experience-progress-bar';
 import { getOptimizedBlur } from '../../utils/performance';
 
+// Константа вне компонента — не пересоздаётся при каждом рендере
+const TOPIC_COLOR_SCHEMES: Record<string, {
+  accentColor: string; borderColor: string;
+  bgGradient: string; selectedBgGradient: string; glow: string;
+}> = {
+  PHYSICAL_ACTIVITY: { accentColor: 'rgba(220, 38, 38, 0.6)', borderColor: 'rgba(220, 38, 38, 0.3)', bgGradient: 'linear-gradient(135deg, rgba(220, 38, 38, 0.15) 0%, rgba(185, 28, 28, 0.08) 100%)', selectedBgGradient: 'linear-gradient(135deg, rgba(220, 38, 38, 0.25) 0%, rgba(185, 28, 28, 0.15) 100%)', glow: '0 0 20px rgba(220, 38, 38, 0.3)' },
+  CREATIVITY:        { accentColor: 'rgba(236, 72, 153, 0.6)', borderColor: 'rgba(236, 72, 153, 0.3)', bgGradient: 'linear-gradient(135deg, rgba(236, 72, 153, 0.15) 0%, rgba(219, 39, 119, 0.08) 100%)', selectedBgGradient: 'linear-gradient(135deg, rgba(236, 72, 153, 0.25) 0%, rgba(219, 39, 119, 0.15) 100%)', glow: '0 0 20px rgba(236, 72, 153, 0.3)' },
+  SOCIAL_SKILLS:     { accentColor: 'rgba(234, 179, 8, 0.6)',  borderColor: 'rgba(234, 179, 8, 0.3)',  bgGradient: 'linear-gradient(135deg, rgba(234, 179, 8, 0.15) 0%, rgba(202, 138, 4, 0.08) 100%)',  selectedBgGradient: 'linear-gradient(135deg, rgba(234, 179, 8, 0.25) 0%, rgba(202, 138, 4, 0.15) 100%)',  glow: '0 0 20px rgba(234, 179, 8, 0.3)' },
+  NUTRITION:         { accentColor: 'rgba(34, 197, 94, 0.6)',  borderColor: 'rgba(34, 197, 94, 0.3)',  bgGradient: 'linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(22, 163, 74, 0.08) 100%)',  selectedBgGradient: 'linear-gradient(135deg, rgba(34, 197, 94, 0.25) 0%, rgba(22, 163, 74, 0.15) 100%)',  glow: '0 0 20px rgba(34, 197, 94, 0.3)' },
+  PRODUCTIVITY:      { accentColor: 'rgba(249, 115, 22, 0.6)', borderColor: 'rgba(249, 115, 22, 0.3)', bgGradient: 'linear-gradient(135deg, rgba(249, 115, 22, 0.15) 0%, rgba(234, 88, 12, 0.08) 100%)',  selectedBgGradient: 'linear-gradient(135deg, rgba(249, 115, 22, 0.25) 0%, rgba(234, 88, 12, 0.15) 100%)',  glow: '0 0 20px rgba(249, 115, 22, 0.3)' },
+  ADVENTURE:         { accentColor: 'rgba(245, 158, 11, 0.6)', borderColor: 'rgba(245, 158, 11, 0.3)', bgGradient: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.08) 100%)',  selectedBgGradient: 'linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(217, 119, 6, 0.15) 100%)',  glow: '0 0 20px rgba(245, 158, 11, 0.3)' },
+  MUSIC:             { accentColor: 'rgba(139, 92, 246, 0.6)', borderColor: 'rgba(139, 92, 246, 0.3)', bgGradient: 'linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(124, 58, 237, 0.08) 100%)',  selectedBgGradient: 'linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(124, 58, 237, 0.15) 100%)',  glow: '0 0 20px rgba(139, 92, 246, 0.3)' },
+  BRAIN:             { accentColor: 'rgba(168, 85, 247, 0.6)', borderColor: 'rgba(168, 85, 247, 0.3)', bgGradient: 'linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(147, 51, 234, 0.08) 100%)',  selectedBgGradient: 'linear-gradient(135deg, rgba(168, 85, 247, 0.25) 0%, rgba(147, 51, 234, 0.15) 100%)',  glow: '0 0 20px rgba(168, 85, 247, 0.3)' },
+  CYBERSPORT:        { accentColor: 'rgba(34, 197, 94, 0.6)',  borderColor: 'rgba(34, 197, 94, 0.3)',  bgGradient: 'linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(22, 163, 74, 0.08) 100%)',  selectedBgGradient: 'linear-gradient(135deg, rgba(34, 197, 94, 0.25) 0%, rgba(22, 163, 74, 0.15) 100%)',  glow: '0 0 20px rgba(34, 197, 94, 0.3)' },
+  DEVELOPMENT:       { accentColor: 'rgba(59, 130, 246, 0.6)', borderColor: 'rgba(59, 130, 246, 0.3)', bgGradient: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.08) 100%)',  selectedBgGradient: 'linear-gradient(135deg, rgba(59, 130, 246, 0.25) 0%, rgba(37, 99, 235, 0.15) 100%)',  glow: '0 0 20px rgba(59, 130, 246, 0.3)' },
+  READING:           { accentColor: 'rgba(99, 102, 241, 0.6)', borderColor: 'rgba(99, 102, 241, 0.3)', bgGradient: 'linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(79, 70, 229, 0.08) 100%)',  selectedBgGradient: 'linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(79, 70, 229, 0.15) 100%)',  glow: '0 0 20px rgba(99, 102, 241, 0.3)' },
+  LANGUAGE_LEARNING: { accentColor: 'rgba(6, 182, 212, 0.6)',  borderColor: 'rgba(6, 182, 212, 0.3)',  bgGradient: 'linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(8, 145, 178, 0.08) 100%)',  selectedBgGradient: 'linear-gradient(135deg, rgba(6, 182, 212, 0.25) 0%, rgba(8, 145, 178, 0.15) 100%)',  glow: '0 0 20px rgba(6, 182, 212, 0.3)' },
+};
+
+const DISABLED_TOPICS = new Set([
+  TaskTopic.CYBERSPORT, TaskTopic.DEVELOPMENT,
+  TaskTopic.READING, TaskTopic.LANGUAGE_LEARNING,
+]);
+
+const ALL_TOPICS = Object.values(TaskTopic);
+
 type TopicsSectionProps = {
   isAuthenticated: boolean;
   onSave?: () => void;
 };
 
+type TopicCardProps = {
+  topic: TaskTopic;
+  isSelected: boolean;
+  isDisabled: boolean;
+  playerTopic: PlayerTaskTopic | undefined;
+  onToggle: (topic: TaskTopic) => void;
+};
+
+const TopicCard = memo(({ topic, isSelected, isDisabled, playerTopic, onToggle }: TopicCardProps) => {
+  const { t } = useLocalization();
+  const colorScheme = TOPIC_COLOR_SCHEMES[topic] ?? TOPIC_COLOR_SCHEMES.DEVELOPMENT;
+
+  return (
+    <button
+      type="button"
+      onClick={() => onToggle(topic)}
+      disabled={isDisabled}
+      className={`group relative p-4 sm:p-6 rounded-2xl md:rounded-3xl transition-all duration-300 ${
+        isDisabled ? 'cursor-not-allowed opacity-50' : 'hover:scale-105 active:scale-95'
+      }`}
+      style={{
+        background: isSelected && !isDisabled ? colorScheme.selectedBgGradient : 'rgba(255, 255, 255, 0.06)',
+        border: isSelected && !isDisabled ? `2px solid ${colorScheme.borderColor}` : '2px solid rgba(220, 235, 245, 0.2)',
+        boxShadow: isSelected && !isDisabled
+          ? `${colorScheme.glow}, inset 0 0 20px rgba(200, 230, 245, 0.03)`
+          : '0 0 15px rgba(180, 220, 240, 0.1), inset 0 0 20px rgba(200, 230, 245, 0.02)',
+        ...(isDisabled && { filter: 'grayscale(0.5)', pointerEvents: 'none' }),
+      }}
+    >
+      {/* Lock indicator */}
+      {isDisabled && (
+        <div className="absolute top-2 right-2 z-20 flex items-center justify-center rounded-full"
+          style={{ width: '28px', height: '28px', background: 'linear-gradient(135deg, rgba(148, 163, 184, 0.6) 0%, rgba(100, 116, 139, 0.4) 100%)', border: '2px solid rgba(148, 163, 184, 0.3)' }}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#ffffff' }}>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+        </div>
+      )}
+
+      {/* Checkmark indicator */}
+      {isSelected && !isDisabled && (
+        <div className="absolute top-2 right-2 z-20 flex items-center justify-center rounded-full"
+          style={{ width: '28px', height: '28px', background: `linear-gradient(135deg, ${colorScheme.accentColor} 0%, ${colorScheme.accentColor.replace('0.6', '0.4')} 100%)`, border: `2px solid ${colorScheme.borderColor}`, boxShadow: `0 0 12px ${colorScheme.accentColor}` }}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#ffffff' }}>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+      )}
+
+      {/* Content */}
+      <div className="relative z-10 text-center">
+        <div className="mb-3 sm:mb-4 flex justify-center items-center"
+          style={{
+            transform: isSelected && !isDisabled ? 'scale(1.1)' : 'scale(1)',
+            filter: isSelected && !isDisabled ? `drop-shadow(0 0 8px ${colorScheme.accentColor})` : 'none',
+            color: isDisabled ? 'rgba(148, 163, 184, 0.5)' : (isSelected ? colorScheme.accentColor : 'rgba(220, 235, 245, 0.8)'),
+            transition: 'transform 0.2s, filter 0.2s',
+          }}
+        >
+          <TopicIcon topic={topic} size={48} className="text-3xl sm:text-4xl" />
+        </div>
+
+        <div className="text-xs sm:text-sm font-tech font-semibold leading-tight mb-2"
+          style={{
+            color: isDisabled ? 'rgba(148, 163, 184, 0.6)' : (isSelected ? '#e8f4f8' : 'rgba(220, 235, 245, 0.8)'),
+            textShadow: isSelected && !isDisabled ? `0 0 4px ${colorScheme.accentColor}` : '0 0 2px rgba(180, 220, 240, 0.2)',
+          }}
+        >
+          {t(`topics.labels.${topic}`)}
+        </div>
+
+        <div className="space-y-2">
+          <div className="inline-flex items-center px-2 py-1 rounded-full border text-xs font-tech font-bold"
+            style={{ background: 'rgba(220, 235, 245, 0.1)', borderColor: 'rgba(220, 235, 245, 0.2)', color: '#e8f4f8' }}
+          >
+            {t('profile.tabs.level')} {playerTopic?.level?.level || 1}
+          </div>
+          <div className="space-y-1">
+            <div className="text-[10px] font-tech" style={{ color: 'rgba(220, 235, 245, 0.7)' }}>
+              {playerTopic?.level?.currentExperience || 0} / {playerTopic?.level?.experienceToNextLevel || 100}
+            </div>
+            <ExperienceProgressBar
+              currentExp={playerTopic?.level?.currentExperience || 0}
+              maxExp={playerTopic?.level?.experienceToNextLevel || 100}
+              accentColor={colorScheme.accentColor}
+              height="h-1.5"
+            />
+          </div>
+        </div>
+      </div>
+    </button>
+  );
+});
+
 const TopicsSection: React.FC<TopicsSectionProps> = ({ isAuthenticated, onSave }) => {
   const fetchInitiatedRef = useRef(false);
-  const [allTopics] = useState<TaskTopic[]>(Object.values(TaskTopic));
   const [playerTopics, setPlayerTopics] = useState<PlayerTaskTopic[]>([]);
   const [originalTopics, setOriginalTopics] = useState<PlayerTaskTopic[]>([]);
   const [firstTime, setFirstTime] = useState(false);
@@ -22,17 +143,14 @@ const TopicsSection: React.FC<TopicsSectionProps> = ({ isAuthenticated, onSave }
   const [loading, setLoading] = useState(true);
   const [contentLoaded, setContentLoaded] = useState(false);
   const { t } = useLocalization();
-  const backdropBlur = getOptimizedBlur('20px', '4px');
 
-  const getIsDisabled = (topic: TaskTopic): boolean => {
-    const disabledTopics = [
-      TaskTopic.CYBERSPORT,
-      TaskTopic.DEVELOPMENT,
-      TaskTopic.READING,
-      TaskTopic.LANGUAGE_LEARNING
-    ];
-    return disabledTopics.includes(topic);
-  };
+  // Map для O(1) поиска вместо find() на каждый рендер
+  const playerTopicsMap = useMemo(() =>
+    new Map(playerTopics.map(pt => [pt.taskTopic, pt])),
+    [playerTopics]
+  );
+
+  const getIsDisabled = (topic: TaskTopic): boolean => DISABLED_TOPICS.has(topic);
 
   const applyTopics = useCallback((rawTopics: PlayerTaskTopic[]) => {
     const topicsWithDisabled = rawTopics.map(pt => ({
@@ -80,11 +198,10 @@ const TopicsSection: React.FC<TopicsSectionProps> = ({ isAuthenticated, onSave }
     [playerTopics, firstTime, hasChanges]
   );
 
-  // Получаем isDisabled для топика (из данных или из функции)
   const getTopicDisabled = useCallback((topic: TaskTopic): boolean => {
-    const playerTopic = playerTopics.find(pt => pt.taskTopic === topic);
+    const playerTopic = playerTopicsMap.get(topic);
     return playerTopic?.isDisabled ?? getIsDisabled(topic);
-  }, [playerTopics]);
+  }, [playerTopicsMap]);
 
   const handleToggle = useCallback((topic: TaskTopic) => {
     // Не позволяем переключать заблокированные топики
@@ -174,96 +291,6 @@ const TopicsSection: React.FC<TopicsSectionProps> = ({ isAuthenticated, onSave }
     }
   }, [firstTime, onSave, playerTopics, originalTopics, applyTopics]);
 
-  const topicColorSchemes = useMemo(() => ({
-      PHYSICAL_ACTIVITY: {
-        accentColor: 'rgba(220, 38, 38, 0.6)',
-        borderColor: 'rgba(220, 38, 38, 0.3)',
-        bgGradient: 'linear-gradient(135deg, rgba(220, 38, 38, 0.15) 0%, rgba(185, 28, 28, 0.08) 100%)',
-        selectedBgGradient: 'linear-gradient(135deg, rgba(220, 38, 38, 0.25) 0%, rgba(185, 28, 28, 0.15) 100%)',
-        glow: '0 0 20px rgba(220, 38, 38, 0.3)',
-      },
-      CREATIVITY: {
-        accentColor: 'rgba(236, 72, 153, 0.6)',
-        borderColor: 'rgba(236, 72, 153, 0.3)',
-        bgGradient: 'linear-gradient(135deg, rgba(236, 72, 153, 0.15) 0%, rgba(219, 39, 119, 0.08) 100%)',
-        selectedBgGradient: 'linear-gradient(135deg, rgba(236, 72, 153, 0.25) 0%, rgba(219, 39, 119, 0.15) 100%)',
-        glow: '0 0 20px rgba(236, 72, 153, 0.3)',
-      },
-      SOCIAL_SKILLS: {
-        accentColor: 'rgba(234, 179, 8, 0.6)',
-        borderColor: 'rgba(234, 179, 8, 0.3)',
-        bgGradient: 'linear-gradient(135deg, rgba(234, 179, 8, 0.15) 0%, rgba(202, 138, 4, 0.08) 100%)',
-        selectedBgGradient: 'linear-gradient(135deg, rgba(234, 179, 8, 0.25) 0%, rgba(202, 138, 4, 0.15) 100%)',
-        glow: '0 0 20px rgba(234, 179, 8, 0.3)',
-      },
-      NUTRITION: {
-        accentColor: 'rgba(34, 197, 94, 0.6)',
-        borderColor: 'rgba(34, 197, 94, 0.3)',
-        bgGradient: 'linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(22, 163, 74, 0.08) 100%)',
-        selectedBgGradient: 'linear-gradient(135deg, rgba(34, 197, 94, 0.25) 0%, rgba(22, 163, 74, 0.15) 100%)',
-        glow: '0 0 20px rgba(34, 197, 94, 0.3)',
-      },
-      PRODUCTIVITY: {
-        accentColor: 'rgba(249, 115, 22, 0.6)',
-        borderColor: 'rgba(249, 115, 22, 0.3)',
-        bgGradient: 'linear-gradient(135deg, rgba(249, 115, 22, 0.15) 0%, rgba(234, 88, 12, 0.08) 100%)',
-        selectedBgGradient: 'linear-gradient(135deg, rgba(249, 115, 22, 0.25) 0%, rgba(234, 88, 12, 0.15) 100%)',
-        glow: '0 0 20px rgba(249, 115, 22, 0.3)',
-      },
-      ADVENTURE: {
-        accentColor: 'rgba(245, 158, 11, 0.6)',
-        borderColor: 'rgba(245, 158, 11, 0.3)',
-        bgGradient: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.08) 100%)',
-        selectedBgGradient: 'linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(217, 119, 6, 0.15) 100%)',
-        glow: '0 0 20px rgba(245, 158, 11, 0.3)',
-      },
-      MUSIC: {
-        accentColor: 'rgba(139, 92, 246, 0.6)',
-        borderColor: 'rgba(139, 92, 246, 0.3)',
-        bgGradient: 'linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(124, 58, 237, 0.08) 100%)',
-        selectedBgGradient: 'linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(124, 58, 237, 0.15) 100%)',
-        glow: '0 0 20px rgba(139, 92, 246, 0.3)',
-      },
-      BRAIN: {
-        accentColor: 'rgba(168, 85, 247, 0.6)',
-        borderColor: 'rgba(168, 85, 247, 0.3)',
-        bgGradient: 'linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(147, 51, 234, 0.08) 100%)',
-        selectedBgGradient: 'linear-gradient(135deg, rgba(168, 85, 247, 0.25) 0%, rgba(147, 51, 234, 0.15) 100%)',
-        glow: '0 0 20px rgba(168, 85, 247, 0.3)',
-      },
-      CYBERSPORT: {
-        accentColor: 'rgba(34, 197, 94, 0.6)',
-        borderColor: 'rgba(34, 197, 94, 0.3)',
-        bgGradient: 'linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(22, 163, 74, 0.08) 100%)',
-        selectedBgGradient: 'linear-gradient(135deg, rgba(34, 197, 94, 0.25) 0%, rgba(22, 163, 74, 0.15) 100%)',
-        glow: '0 0 20px rgba(34, 197, 94, 0.3)',
-      },
-      DEVELOPMENT: {
-        accentColor: 'rgba(59, 130, 246, 0.6)',
-        borderColor: 'rgba(59, 130, 246, 0.3)',
-        bgGradient: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.08) 100%)',
-        selectedBgGradient: 'linear-gradient(135deg, rgba(59, 130, 246, 0.25) 0%, rgba(37, 99, 235, 0.15) 100%)',
-        glow: '0 0 20px rgba(59, 130, 246, 0.3)',
-      },
-      READING: {
-        accentColor: 'rgba(99, 102, 241, 0.6)',
-        borderColor: 'rgba(99, 102, 241, 0.3)',
-        bgGradient: 'linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(79, 70, 229, 0.08) 100%)',
-        selectedBgGradient: 'linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(79, 70, 229, 0.15) 100%)',
-        glow: '0 0 20px rgba(99, 102, 241, 0.3)',
-      },
-      LANGUAGE_LEARNING: {
-        accentColor: 'rgba(6, 182, 212, 0.6)',
-        borderColor: 'rgba(6, 182, 212, 0.3)',
-        bgGradient: 'linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(8, 145, 178, 0.08) 100%)',
-        selectedBgGradient: 'linear-gradient(135deg, rgba(6, 182, 212, 0.25) 0%, rgba(8, 145, 178, 0.15) 100%)',
-        glow: '0 0 20px rgba(6, 182, 212, 0.3)',
-      },
-    }), []);
-
-  const getTopicColorScheme = useCallback((topic: TaskTopic) => {
-    return topicColorSchemes[topic] || topicColorSchemes.DEVELOPMENT;
-  }, [topicColorSchemes]);
 
   if (loading) {
     return <TopicsSectionSkeleton />;
@@ -279,186 +306,16 @@ const TopicsSection: React.FC<TopicsSectionProps> = ({ isAuthenticated, onSave }
     >
       {/* Topics Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
-        {allTopics.map((topic, index) => {
-          const playerTopic = playerTopics.find(pt => pt.taskTopic === topic);
-          const isSelected = playerTopic?.isActive || false;
-          const isDisabled = getTopicDisabled(topic);
-          const colorScheme = getTopicColorScheme(topic);
-          return (
-            <button
-              key={topic}
-              type="button"
-              onClick={() => handleToggle(topic)}
-              disabled={isDisabled}
-              className={`group relative p-4 sm:p-6 rounded-2xl md:rounded-3xl transition-all duration-300 ${
-                isDisabled
-                  ? 'cursor-not-allowed opacity-50'
-                  : 'hover:scale-105 active:scale-95'
-              }`}
-              style={{
-                background: isSelected && !isDisabled
-                  ? colorScheme.selectedBgGradient
-                  : 'rgba(255, 255, 255, 0.06)',
-                backdropFilter: `blur(${backdropBlur})`,
-                border: isSelected && !isDisabled
-                  ? `2px solid ${colorScheme.borderColor}`
-                  : '2px solid rgba(220, 235, 245, 0.2)',
-                boxShadow: isSelected && !isDisabled
-                  ? `${colorScheme.glow}, inset 0 0 20px rgba(200, 230, 245, 0.03)`
-                  : '0 0 15px rgba(180, 220, 240, 0.1), inset 0 0 20px rgba(200, 230, 245, 0.02)',
-                animationDelay: `${index * 50}ms`,
-                ...(isDisabled && {
-                  filter: 'grayscale(0.5)',
-                  pointerEvents: 'none',
-                }),
-              }}
-            >
-              {/* Glowing orbs */}
-              <div
-                className="absolute -top-4 -right-4 w-16 h-16 rounded-full blur-xl opacity-10"
-                style={{
-                  background: colorScheme.accentColor
-                }}></div>
-              <div
-                className="absolute -bottom-2 -left-2 w-12 h-12 rounded-full blur-lg opacity-10"
-                style={{
-                  background: colorScheme.accentColor
-                }}></div>
-
-              {/* Lock indicator for disabled topic */}
-              {isDisabled && (
-                <div
-                  className="absolute top-2 right-2 z-20 flex items-center justify-center rounded-full transition-all duration-300"
-                  style={{
-                    width: '28px',
-                    height: '28px',
-                    background: 'linear-gradient(135deg, rgba(148, 163, 184, 0.6) 0%, rgba(100, 116, 139, 0.4) 100%)',
-                    border: '2px solid rgba(148, 163, 184, 0.3)',
-                    boxShadow: '0 0 12px rgba(148, 163, 184, 0.3), inset 0 0 8px rgba(255, 255, 255, 0.1)',
-                  }}
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    style={{
-                      color: '#ffffff',
-                      filter: 'drop-shadow(0 0 2px rgba(255, 255, 255, 0.8))'
-                    }}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                    />
-                  </svg>
-                </div>
-              )}
-
-              {/* Checkmark indicator for selected topic */}
-              {isSelected && !isDisabled && (
-                <div
-                  className="absolute top-2 right-2 z-20 flex items-center justify-center rounded-full transition-all duration-300"
-                  style={{
-                    width: '28px',
-                    height: '28px',
-                    background: `linear-gradient(135deg, ${colorScheme.accentColor} 0%, ${colorScheme.accentColor.replace('0.6', '0.4')} 100%)`,
-                    border: `2px solid ${colorScheme.borderColor}`,
-                    boxShadow: `0 0 12px ${colorScheme.accentColor}, inset 0 0 8px rgba(255, 255, 255, 0.2)`,
-                    animation: 'checkmarkPulse 2s ease-in-out infinite'
-                  }}
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    style={{
-                      color: '#ffffff',
-                      filter: 'drop-shadow(0 0 2px rgba(255, 255, 255, 0.8))'
-                    }}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={3}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                </div>
-              )}
-
-              {/* Content */}
-              <div className="relative z-10 text-center">
-                {/* Icon */}
-                <div
-                  className="mb-3 sm:mb-4 transition-transform duration-200 flex justify-center items-center"
-                  style={{
-                    transform: isSelected && !isDisabled ? 'scale(1.1)' : 'scale(1)',
-                    filter: isSelected && !isDisabled ? `drop-shadow(0 0 8px ${colorScheme.accentColor})` : 'none',
-                    color: isDisabled
-                      ? 'rgba(148, 163, 184, 0.5)'
-                      : (isSelected ? colorScheme.accentColor : 'rgba(220, 235, 245, 0.8)')
-                  }}
-                >
-                  <TopicIcon
-                    topic={topic}
-                    size={48}
-                    className="text-3xl sm:text-4xl"
-                  />
-                </div>
-
-                {/* Label */}
-                <div
-                  className="text-xs sm:text-sm font-tech font-semibold leading-tight mb-2 transition-colors duration-200"
-                  style={{
-                    color: isDisabled
-                      ? 'rgba(148, 163, 184, 0.6)'
-                      : (isSelected ? '#e8f4f8' : 'rgba(220, 235, 245, 0.8)'),
-                    textShadow: isSelected && !isDisabled
-                      ? `0 0 4px ${colorScheme.accentColor}`
-                      : '0 0 2px rgba(180, 220, 240, 0.2)'
-                  }}
-                >
-                  {t(`topics.labels.${topic}`)}
-                </div>
-
-                {/* Level and Progress */}
-                <div className="space-y-2">
-                  {/* Level Badge */}
-                  <div
-                    className="inline-flex items-center px-2 py-1 rounded-full border text-xs font-tech font-bold"
-                    style={{
-                      background: 'rgba(220, 235, 245, 0.1)',
-                      borderColor: 'rgba(220, 235, 245, 0.2)',
-                      color: '#e8f4f8'
-                    }}
-                  >
-                    {t('profile.tabs.level')} {playerTopic?.level?.level || 1}
-                  </div>
-
-                  {/* Experience Progress */}
-                  <div className="space-y-1">
-                    <div
-                      className="text-[10px] font-tech"
-                      style={{ color: 'rgba(220, 235, 245, 0.7)' }}
-                    >
-                      {playerTopic?.level?.currentExperience || 0} / {playerTopic?.level?.experienceToNextLevel || 100}
-                    </div>
-                    <ExperienceProgressBar
-                      currentExp={playerTopic?.level?.currentExperience || 0}
-                      maxExp={playerTopic?.level?.experienceToNextLevel || 100}
-                      accentColor={colorScheme.accentColor}
-                      height="h-1.5"
-                    />
-                  </div>
-                </div>
-              </div>
-            </button>
-          );
-        })}
+        {ALL_TOPICS.map((topic) => (
+          <TopicCard
+            key={topic}
+            topic={topic}
+            isSelected={playerTopicsMap.get(topic)?.isActive ?? false}
+            isDisabled={getTopicDisabled(topic)}
+            playerTopic={playerTopicsMap.get(topic)}
+            onToggle={handleToggle}
+          />
+        ))}
       </div>
 
       {/* Info section */}
@@ -467,7 +324,7 @@ const TopicsSection: React.FC<TopicsSectionProps> = ({ isAuthenticated, onSave }
           className="relative overflow-hidden rounded-2xl md:rounded-3xl p-6 max-w-2xl w-full"
           style={{
             background: 'rgba(255, 255, 255, 0.06)',
-            backdropFilter: `blur(${backdropBlur})`,
+            backdropFilter: 'blur(20px)',
             border: '2px solid rgba(220, 235, 245, 0.2)',
             boxShadow: `
               0 0 20px rgba(180, 220, 240, 0.15),
@@ -592,18 +449,6 @@ const TopicsSection: React.FC<TopicsSectionProps> = ({ isAuthenticated, onSave }
         </div>
       )}
 
-      <style>{`
-        @keyframes checkmarkPulse {
-          0%, 100% {
-            opacity: 1;
-            transform: scale(1);
-          }
-          50% {
-            opacity: 0.9;
-            transform: scale(1.05);
-          }
-        }
-      `}</style>
     </div>
   );
 };

@@ -14,7 +14,7 @@ type ResponsePaging {
     totalRowCount: Long!
     totalPageCount: Long!
     currentPage: Int!
-    hasMore: Boolean!
+    currentPageSize: Int!
 }
 
 type ResponseQueryOptions {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import type { Task, PlayerTaskStatus } from '../../api';
-import { PlayerTaskStatus as TaskStatus } from '../../api';
+import type { Task, PlayerTaskStatus } from '../../graphql/generated';
+import { PlayerTaskStatus as TaskStatus } from '../../graphql/generated';
 import TopicIcon from './TopicIcons';
 import Icon from '../common/Icon';
 import RarityIndicator from './RarityIndicator';

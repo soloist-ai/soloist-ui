@@ -1,5 +1,4 @@
 # ── Bootstrap ────────────────────────────────────────────────────────────────
-# Only what was previously in getUserAdditionalInfo: identity + locale + dayStreak
 query GetAppData {
   me {
     id
@@ -50,25 +49,7 @@ query RefreshDayStreak {
 # ProfileTab — fresh fetch on open
 query GetUserProfile {
   me {
-    id
-    username
-    firstName
-    lastName
-    photoUrl
-    roles
-    locale {
-      tag
-      isManual
-    }
-    player {
-      id
-      agility
-      strength
-      intelligence
-      level {
-        ...LevelFields
-      }
-    }
+    ...UserProfileFields
   }
 }
 
@@ -96,13 +77,7 @@ query GetBalanceWithTransactions($paging: PagingInput!, $options: SearchOptionsI
         }
         transactions(paging: $paging, options: $options) {
           transactions {
-            id
-            amount {
-              ...MoneyFields
-            }
-            type
-            cause
-            createdAt
+            ...BalanceTransactionFields
           }
           paging {
             ...ResponsePagingFields
@@ -117,24 +92,14 @@ query GetBalanceWithTransactions($paging: PagingInput!, $options: SearchOptionsI
 query GetLeaderboardInitial($paging: PagingInput!, $filter: LeaderboardFilterInput!) {
   usersLeaderboard(paging: $paging, filter: $filter) {
     users {
-      id
-      firstName
-      lastName
-      photoUrl
-      score
-      position
+      ...LeaderboardUserFields
     }
     paging {
       ...ResponsePagingFields
     }
   }
   userLeaderboard(filter: $filter) {
-    id
-    firstName
-    lastName
-    photoUrl
-    score
-    position
+    ...LeaderboardUserFields
   }
 }
 
@@ -142,24 +107,8 @@ query GetLeaderboardInitial($paging: PagingInput!, $filter: LeaderboardFilterInp
 
 query GetUserById($id: Long!) {
   user(id: $id) {
-    id
-    username
-    firstName
-    lastName
-    photoUrl
-    locale {
-      tag
-      isManual
-    }
-    roles
+    ...UserProfileFields
     player {
-      id
-      agility
-      strength
-      intelligence
-      level {
-        ...LevelFields
-      }
       balance {
         id
         amount {
@@ -185,11 +134,7 @@ query GetDailyTasks {
     player {
       dailyTasks {
         tasks {
-          id
-          title
-          progress
-          goal
-          isCompleted
+          ...PlayerDailyTaskFields
         }
       }
     }
@@ -204,13 +149,7 @@ query GetBalanceTransactions($paging: PagingInput!, $options: SearchOptionsInput
       balance {
         transactions(paging: $paging, options: $options) {
           transactions {
-            id
-            amount {
-              ...MoneyFields
-            }
-            type
-            cause
-            createdAt
+            ...BalanceTransactionFields
           }
           paging {
             ...ResponsePagingFields
@@ -240,12 +179,7 @@ query GetClosedTasks($paging: PagingInput!, $options: SearchOptionsInput) {
 query GetUsersLeaderboard($paging: PagingInput!, $filter: LeaderboardFilterInput!) {
   usersLeaderboard(paging: $paging, filter: $filter) {
     users {
-      id
-      firstName
-      lastName
-      photoUrl
-      score
-      position
+      ...LeaderboardUserFields
     }
     paging {
       ...ResponsePagingFields

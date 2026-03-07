@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import type { Stamina } from '../../api';
+import type { Stamina } from '../../graphql/generated';
 import Icon from '../common/Icon';
 import { useLocalization } from '../../hooks/useLocalization';
 import { useTelegram } from '../../hooks/useTelegram';

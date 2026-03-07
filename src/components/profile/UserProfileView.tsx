@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { gqlSdk } from '../../graphql/client';
-import type { User } from '../../api';
+import type { User } from '../../graphql/generated';
 import ProfileView from './ProfileView';
 
 type UserProfileViewProps = {

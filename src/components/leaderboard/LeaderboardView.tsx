@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocalization } from '../../hooks/useLocalization';
 import { gqlSdk } from '../../graphql/client';
 import type { GetUsersLeaderboardQuery, GetLeaderboardInitialQuery } from '../../graphql/generated';
-import { LeaderboardType } from '../../api';
+import { LeaderboardType } from '../../graphql/generated';
 import Icon from '../common/Icon';
 import { cn } from '../../utils';
 import ScrollNavigationButtons from '../common/ScrollNavigationButtons';
@@ -59,7 +59,7 @@ const LeaderboardView: React.FC<LeaderboardViewProps> = ({
         paging: { page: 0, pageSize: 20 },
       });
       const { users: newUsers, paging } = result.usersLeaderboard;
-      const hasMoreData = newUsers.length > 0 && (paging?.hasMore || false);
+      const hasMoreData = paging != null && paging.currentPage < paging.totalPageCount - 1;
 
       if (paging?.totalRowCount !== undefined) setTotalCount(paging.totalRowCount);
       setLeaderboard(newUsers);
@@ -72,7 +72,7 @@ const LeaderboardView: React.FC<LeaderboardViewProps> = ({
       const partialData = error?.response?.data;
       if (partialData?.usersLeaderboard) {
         const { users: newUsers, paging } = partialData.usersLeaderboard;
-        const hasMoreData = newUsers.length > 0 && (paging?.hasMore || false);
+        const hasMoreData = paging != null && paging.currentPage < paging.totalPageCount - 1;
         if (paging?.totalRowCount !== undefined) setTotalCount(paging.totalRowCount);
         setLeaderboard(newUsers);
         setHasMore(hasMoreData);
@@ -112,7 +112,7 @@ const LeaderboardView: React.FC<LeaderboardViewProps> = ({
         paging: { page, pageSize: 20 },
       });
       const { users: newUsers, paging } = result.usersLeaderboard;
-      const hasMoreData = newUsers.length > 0 && (paging?.hasMore || false);
+      const hasMoreData = paging != null && paging.currentPage < paging.totalPageCount - 1;
 
       if (paging?.totalRowCount !== undefined) setTotalCount(paging.totalRowCount);
 

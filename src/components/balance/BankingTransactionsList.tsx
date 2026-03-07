@@ -4,7 +4,7 @@ import { gqlSdk } from '../../graphql/client';
 import Icon from '../common/Icon';
 import { getMonthGenitive } from '../../utils';
 import ScrollNavigationButtons from '../common/ScrollNavigationButtons';
-import type { LocalizedField } from '../../api';
+import type { LocalizedField } from '../../graphql/generated';
 import type { BalanceTransaction, MoneyFieldsFragment, ResponsePagingFieldsFragment, OrderMode as GqlOrderMode } from '../../graphql/generated';
 import { OrderMode } from '../../graphql/generated';
 
@@ -42,7 +42,7 @@ const BankingTransactionsList: React.FC<BankingTransactionsListProps> = ({
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(() => initialData ? (initialData.paging.hasMore ?? true) : true);
+  const [hasMore, setHasMore] = useState(() => initialData ? initialData.paging.currentPage < initialData.paging.totalPageCount - 1 : true);
   const [totalCount, setTotalCount] = useState<number | null>(() => initialData?.paging.totalRowCount ?? null);
   const [availableFilters] = useState<LocalizedField[]>([]);
   
@@ -51,13 +51,13 @@ const BankingTransactionsList: React.FC<BankingTransactionsListProps> = ({
   const enumFilters = useMemo(() => propEnumFilters || {}, [propEnumFilters]);
   const sorts: { field: string; mode: GqlOrderMode }[] = useMemo(() => [{
     field: 'createdAt',
-    mode: OrderMode.Desc,
+    mode: OrderMode.DESC,
   }], []);
   
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const currentPageRef = useRef(0);
-  const hasMoreRef = useRef(initialData ? (initialData.paging.hasMore ?? true) : true);
+  const hasMoreRef = useRef(initialData ? initialData.paging.currentPage < initialData.paging.totalPageCount - 1 : true);
   const isLoadingRef = useRef(false);
   const loadTransactionsRef = useRef<typeof loadTransactions | undefined>(undefined);
   // Mount guard — true after first effect run so StrictMode remount doesn't refetch
@@ -172,7 +172,7 @@ const BankingTransactionsList: React.FC<BankingTransactionsListProps> = ({
       });
 
       const { transactions: newTransactions, paging } = result.me.player.balance.transactions;
-      const hasMoreData = newTransactions.length > 0 && (paging?.hasMore || false);
+      const hasMoreData = paging != null && paging.currentPage < paging.totalPageCount - 1;
 
       if (paging?.totalRowCount !== undefined) {
         setTotalCount(paging.totalRowCount);

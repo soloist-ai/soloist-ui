@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocalization } from '../hooks/useLocalization';
-import type { LocalizedField } from '../api';
+import type { LocalizedField } from '../graphql/generated';
 import BankingTransactionsList, { type GqlTransaction } from '../components/balance/BankingTransactionsList';
 import Icon from '../components/common/Icon';
 import FilterDropdown from '../components/filters/FilterDropdown';
@@ -26,7 +26,7 @@ interface InitialData {
 }
 
 const PAGE_SIZE = 20;
-const DEFAULT_SORTS: { field: string; mode: GqlOrderMode }[] = [{ field: 'createdAt', mode: OrderMode.Desc }];
+const DEFAULT_SORTS: { field: string; mode: GqlOrderMode }[] = [{ field: 'createdAt', mode: OrderMode.DESC }];
 
 const BalanceTab: React.FC<BalanceTabProps> = ({ isAuthenticated }) => {
   const fetchInitiatedRef = useRef(false);

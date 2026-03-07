@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import type { User } from '../api';
+import type { User } from '../graphql/generated';
 import ProfileView from '../components/profile/ProfileView';
 import { gqlSdk } from '../graphql/client';
 
