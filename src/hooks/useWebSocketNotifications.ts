@@ -5,6 +5,7 @@ import { useSettings } from './useSettings';
 import { gqlSdk } from '../graphql/client';
 import { applyLocale } from '../utils/localeUtils';
 import { useMocks } from '../config/environment';
+import { NotificationSource } from '../api';
 import { websocketManager } from '../services/websocketManager';
 
 interface UseWebSocketNotificationsProps {
@@ -30,12 +31,13 @@ export function useWebSocketNotifications({ enabled, authPromise }: UseWebSocket
 
           // Если message != null — отображаем уведомление (с учётом source)
           const shouldShowToast = notification.message != null && notification.message !== '';
+          const src = String(notification.source ?? '').toLowerCase().replace(/_/g, '');
 
-          if (notification.source === 'dayStreak' || notification.source === 'DAY_STREAK') {
+          if (src === NotificationSource.DAY_STREAK.toLowerCase().replace(/_/g, '')) {
             window.dispatchEvent(new CustomEvent('day-streak-notification', {
               detail: { message: notification.message ?? undefined },
             }));
-          } else if (notification.source === 'TASKS' || notification.source === 'tasks') {
+          } else if (src === NotificationSource.TASKS.toLowerCase().replace(/_/g, '')) {
             if (shouldShowToast) {
               show({
                 message: notification.message,
@@ -44,7 +46,7 @@ export function useWebSocketNotifications({ enabled, authPromise }: UseWebSocket
               });
             }
             window.dispatchEvent(new CustomEvent('tasks-notification', {
-              detail: { source: 'tasks' }
+              detail: { source: NotificationSource.TASKS }
             }));
           } else if (shouldShowToast) {
             show({
@@ -82,36 +84,30 @@ export function useWebSocketNotifications({ enabled, authPromise }: UseWebSocket
       const removeNotificationHandler = websocketManager.addNotificationHandler((notification) => {
         // Если message != null, отображаем уведомление (с учётом source)
         const hasMessage = notification.message != null && notification.message !== '';
+        // Нормализуем source: сервер может слать "TASKS", "tasks", "DAY_STREAK" и т.д.
+        const src = String(notification.source ?? '').toLowerCase().replace(/_/g, '');
 
-        switch (notification.source) {
-          case 'dayStreak':
-            window.dispatchEvent(new CustomEvent('day-streak-notification', {
-              detail: { message: notification.message ?? undefined },
-            }));
-            break;
-
-          case 'tasks':
-            if (hasMessage) {
-              show({
-                message: notification.message!,
-                type: (notification.type?.toLowerCase?.() ?? notification.type) as 'info' | 'success' | 'warning' | 'error',
-                duration: 2000,
-              });
-            }
-            window.dispatchEvent(new CustomEvent('tasks-notification', {
-              detail: { source: notification.source }
-            }));
-            break;
-
-          default:
-            if (hasMessage) {
-              show({
-                message: notification.message!,
-                type: (notification.type?.toLowerCase?.() ?? notification.type) as 'info' | 'success' | 'warning' | 'error',
-                duration: 2000,
-              });
-            }
-            break;
+        if (src === NotificationSource.DAY_STREAK.toLowerCase().replace(/_/g, '')) {
+          window.dispatchEvent(new CustomEvent('day-streak-notification', {
+            detail: { message: notification.message ?? undefined },
+          }));
+        } else if (src === NotificationSource.TASKS.toLowerCase().replace(/_/g, '')) {
+          if (hasMessage) {
+            show({
+              message: notification.message!,
+              type: (notification.type?.toLowerCase?.() ?? notification.type) as 'info' | 'success' | 'warning' | 'error',
+              duration: 2000,
+            });
+          }
+          window.dispatchEvent(new CustomEvent('tasks-notification', {
+            detail: { source: NotificationSource.TASKS }
+          }));
+        } else if (hasMessage) {
+          show({
+            message: notification.message!,
+            type: (notification.type?.toLowerCase?.() ?? notification.type) as 'info' | 'success' | 'warning' | 'error',
+            duration: 2000,
+          });
         }
       });
 

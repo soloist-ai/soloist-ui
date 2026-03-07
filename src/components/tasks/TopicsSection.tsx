@@ -35,6 +35,7 @@ const ALL_TOPICS = Object.values(TaskTopic);
 
 type TopicsSectionProps = {
   isAuthenticated: boolean;
+  isFirstTime?: boolean;
   onSave?: () => void;
 };
 
@@ -134,7 +135,7 @@ const TopicCard = memo(({ topic, isSelected, isDisabled, playerTopic, onToggle }
   );
 });
 
-const TopicsSection: React.FC<TopicsSectionProps> = ({ isAuthenticated, onSave }) => {
+const TopicsSection: React.FC<TopicsSectionProps> = ({ isAuthenticated, isFirstTime: isFirstTimeProp, onSave }) => {
   const fetchInitiatedRef = useRef(false);
   const [playerTopics, setPlayerTopics] = useState<PlayerTaskTopic[]>([]);
   const [originalTopics, setOriginalTopics] = useState<PlayerTaskTopic[]>([]);
@@ -243,6 +244,9 @@ const TopicsSection: React.FC<TopicsSectionProps> = ({ isAuthenticated, onSave }
 
   const handleSave = useCallback(async () => {
     setSaving(true);
+    // isFirstTimeProp (from activeTasks endpoint) is the authoritative source;
+    // fall back to local firstTime (derived from topics) if prop not provided.
+    const shouldGenerateTasks = isFirstTimeProp ?? firstTime;
 
     try {
       const changedTopics = playerTopics
@@ -256,28 +260,25 @@ const TopicsSection: React.FC<TopicsSectionProps> = ({ isAuthenticated, onSave }
           isDisabled: pt.isDisabled ?? getIsDisabled(pt.taskTopic),
         }));
 
-      if (changedTopics.length > 0) {
-        await gqlSdk.SavePlayerTopics({
-          topics: changedTopics.map(pt => ({
-            id: pt.id,
-            isActive: pt.isActive,
-            taskTopic: pt.taskTopic as any,
-            version: pt.version,
-          })),
-        });
-      }
+      const topicsInput = changedTopics.map(pt => ({
+        id: pt.id,
+        isActive: pt.isActive,
+        taskTopic: pt.taskTopic as any,
+        version: pt.version,
+      }));
 
-      if (firstTime) {
-        try {
+      if (shouldGenerateTasks) {
+        // Single request: save topics + generate tasks (server executes in order)
+        if (topicsInput.length > 0) {
+          await gqlSdk.SavePlayerTopicsAndGenerate({ topics: topicsInput });
+        } else {
           await gqlSdk.GenerateTasks();
-        } catch (genErr) {
-          // Backend may fail on first generation — topics are already saved,
-          // tasks will be generated asynchronously by the server.
-          console.warn('[TopicsSection] GenerateTasks failed (non-fatal):', genErr);
         }
+      } else if (topicsInput.length > 0) {
+        await gqlSdk.SavePlayerTopics({ topics: topicsInput });
       }
 
-      if (firstTime) {
+      if (shouldGenerateTasks) {
         onSave?.();
       }
 
@@ -289,7 +290,7 @@ const TopicsSection: React.FC<TopicsSectionProps> = ({ isAuthenticated, onSave }
     } finally {
       setSaving(false);
     }
-  }, [firstTime, onSave, playerTopics, originalTopics, applyTopics]);
+  }, [firstTime, isFirstTimeProp, onSave, playerTopics, originalTopics, applyTopics]);
 
 
   if (loading) {

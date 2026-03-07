@@ -24,7 +24,6 @@ type TasksSectionProps = {
   /** Подгрузка при переключении на «Активные» (без полностраничного skeleton) */
   activeViewLoading?: boolean;
   firstTime: boolean;
-  onTasksUpdate?: (tasks: PlayerTask[], stamina?: Stamina) => void;
   onGoToTopics?: () => void;
   initialViewMode?: 'active' | 'completed' | 'daily';
   isTransitioning?: boolean;
@@ -38,7 +37,6 @@ const TasksSection: React.FC<TasksSectionProps> = ({
   loading,
   activeViewLoading = false,
   firstTime,
-  onTasksUpdate,
   onGoToTopics,
   initialViewMode = 'active',
   isTransitioning = false
@@ -113,15 +111,6 @@ const TasksSection: React.FC<TasksSectionProps> = ({
       const response = await taskActions.completeTask(task);
       setCompletedTask(task);
       setCompletionResponse(response);
-      
-      if (onTasksUpdate) {
-        setTimeout(() => {
-          gqlSdk.RefreshActiveTasks().then(({ me }) => {
-            const { activeTasks, stamina: s } = me.player;
-            onTasksUpdate(activeTasks.tasks, s);
-          }).catch(() => {});
-        }, 100);
-      }
     } catch (error: any) {
       console.error('Error completing task:', error);
       if (error?.message?.includes('Not enough stamina')) {
@@ -132,7 +121,7 @@ const TasksSection: React.FC<TasksSectionProps> = ({
     } finally {
       setTaskLoading(false);
     }
-  }, [stamina, onTasksUpdate, t]);
+  }, [stamina, t]);
 
   const skipTask = useCallback(async (playerTask: PlayerTask) => {
     // Проверяем наличие достаточной стамины
@@ -149,15 +138,6 @@ const TasksSection: React.FC<TasksSectionProps> = ({
     try {
       setTaskLoading(true);
       await taskActions.skipTask(playerTask);
-      
-      if (onTasksUpdate) {
-        setTimeout(() => {
-          gqlSdk.RefreshActiveTasks().then(({ me }) => {
-            const { activeTasks, stamina: s } = me.player;
-            onTasksUpdate(activeTasks.tasks, s);
-          }).catch(() => {});
-        }, 100);
-      }
     } catch (error: any) {
       console.error('Error skipping task:', error);
       if (error?.message?.includes('Not enough stamina')) {
@@ -168,7 +148,7 @@ const TasksSection: React.FC<TasksSectionProps> = ({
     } finally {
       setTaskLoading(false);
     }
-  }, [stamina, onTasksUpdate, t]);
+  }, [stamina, t]);
 
   const handleConfirmAction = useCallback(() => {
     if (confirmAction) {

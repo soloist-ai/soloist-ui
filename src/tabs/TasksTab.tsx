@@ -98,8 +98,10 @@ const TasksTab: React.FC<TasksTabProps> = ({ isAuthenticated }) => {
   useEffect(() => {
     if (!isAuthenticated) return;
 
+    if (taskViewMode !== 'active') return;
+
     const syncStamina = () => {
-      gqlSdk.RefreshActiveTasks()
+      gqlSdk.GetPlayerStamina()
         .then(({ me: res }) => {
           if (res.player.stamina) setStamina(res.player.stamina);
         })
@@ -108,7 +110,7 @@ const TasksTab: React.FC<TasksTabProps> = ({ isAuthenticated }) => {
 
     const intervalId = setInterval(syncStamina, 60_000);
     return () => clearInterval(intervalId);
-  }, [isAuthenticated]);
+  }, [isAuthenticated, taskViewMode]);
 
   // Обработчик переключения на топики
   const handleGoToTopics = useCallback(() => {
@@ -614,6 +616,7 @@ const TasksTab: React.FC<TasksTabProps> = ({ isAuthenticated }) => {
             {displayTabMode === 'topics' ? (
               <TopicsSection
                 isAuthenticated={isAuthenticated}
+                isFirstTime={firstTime}
                 onSave={handleTopicsSave}
               />
             ) : (
@@ -636,7 +639,6 @@ const TasksTab: React.FC<TasksTabProps> = ({ isAuthenticated }) => {
                   loading={loading}
                   activeViewLoading={activeViewLoading}
                   firstTime={firstTime}
-                  onTasksUpdate={handleTasksUpdate}
                   onGoToTopics={handleGoToTopics}
                   initialViewMode={displayTaskViewMode}
                   isTransitioning={isTransitioning}

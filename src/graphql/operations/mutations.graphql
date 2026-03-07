@@ -21,6 +21,11 @@ mutation SavePlayerTopics($topics: [PlayerTaskTopicInput!]!) {
   savePlayerTopics(topics: $topics)
 }
 
+mutation SavePlayerTopicsAndGenerate($topics: [PlayerTaskTopicInput!]!) {
+  savePlayerTopics(topics: $topics)
+  generateTasks
+}
+
 mutation UpdateUserLocale($locale: UserLocaleInput!) {
   updateUserLocale(locale: $locale)
 }

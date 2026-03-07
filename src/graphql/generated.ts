@@ -524,6 +524,13 @@ export type SavePlayerTopicsMutationVariables = Exact<{
 
 export type SavePlayerTopicsMutation = { __typename?: 'Mutation', savePlayerTopics: boolean };
 
+export type SavePlayerTopicsAndGenerateMutationVariables = Exact<{
+  topics: Array<PlayerTaskTopicInput> | PlayerTaskTopicInput;
+}>;
+
+
+export type SavePlayerTopicsAndGenerateMutation = { __typename?: 'Mutation', savePlayerTopics: boolean, generateTasks: boolean };
+
 export type UpdateUserLocaleMutationVariables = Exact<{
   locale: UserLocaleInput;
 }>;
@@ -546,6 +553,14 @@ export type RefreshActiveTasksQuery = { __typename?: 'Query', me: { __typename?:
           { __typename?: 'PlayerTask' }
           & PlayerTaskFieldsFragment
         )> }, stamina: (
+        { __typename?: 'Stamina' }
+        & StaminaFieldsFragment
+      ) } } };
+
+export type GetPlayerStaminaQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetPlayerStaminaQuery = { __typename?: 'Query', me: { __typename?: 'User', player: { __typename?: 'Player', stamina: (
         { __typename?: 'Stamina' }
         & StaminaFieldsFragment
       ) } } };
@@ -863,6 +878,12 @@ export const SavePlayerTopicsDocument = gql`
   savePlayerTopics(topics: $topics)
 }
     `;
+export const SavePlayerTopicsAndGenerateDocument = gql`
+    mutation SavePlayerTopicsAndGenerate($topics: [PlayerTaskTopicInput!]!) {
+  savePlayerTopics(topics: $topics)
+  generateTasks
+}
+    `;
 export const UpdateUserLocaleDocument = gql`
     mutation UpdateUserLocale($locale: UserLocaleInput!) {
   updateUserLocale(locale: $locale)
@@ -904,6 +925,17 @@ export const RefreshActiveTasksDocument = gql`
 }
     ${PlayerTaskFieldsFragmentDoc}
 ${StaminaFieldsFragmentDoc}`;
+export const GetPlayerStaminaDocument = gql`
+    query GetPlayerStamina {
+  me {
+    player {
+      stamina {
+        ...StaminaFields
+      }
+    }
+  }
+}
+    ${StaminaFieldsFragmentDoc}`;
 export const RefreshDayStreakDocument = gql`
     query RefreshDayStreak {
   me {
@@ -1084,6 +1116,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     SavePlayerTopics(variables: SavePlayerTopicsMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<SavePlayerTopicsMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<SavePlayerTopicsMutation>({ document: SavePlayerTopicsDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'SavePlayerTopics', 'mutation', variables);
     },
+    SavePlayerTopicsAndGenerate(variables: SavePlayerTopicsAndGenerateMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<SavePlayerTopicsAndGenerateMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<SavePlayerTopicsAndGenerateMutation>({ document: SavePlayerTopicsAndGenerateDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'SavePlayerTopicsAndGenerate', 'mutation', variables);
+    },
     UpdateUserLocale(variables: UpdateUserLocaleMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<UpdateUserLocaleMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<UpdateUserLocaleMutation>({ document: UpdateUserLocaleDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'UpdateUserLocale', 'mutation', variables);
     },
@@ -1092,6 +1127,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     RefreshActiveTasks(variables?: RefreshActiveTasksQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<RefreshActiveTasksQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<RefreshActiveTasksQuery>({ document: RefreshActiveTasksDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'RefreshActiveTasks', 'query', variables);
+    },
+    GetPlayerStamina(variables?: GetPlayerStaminaQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetPlayerStaminaQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetPlayerStaminaQuery>({ document: GetPlayerStaminaDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetPlayerStamina', 'query', variables);
     },
     RefreshDayStreak(variables?: RefreshDayStreakQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<RefreshDayStreakQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<RefreshDayStreakQuery>({ document: RefreshDayStreakDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'RefreshDayStreak', 'query', variables);

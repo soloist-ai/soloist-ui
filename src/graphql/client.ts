@@ -75,6 +75,16 @@ async function handleGraphqlMock(operationName: string, variables?: Record<strin
         },
       };
     }
+    case 'GetPlayerStamina': {
+      const data = await mockPlayerService.getActiveTasks();
+      return {
+        me: {
+          player: {
+            stamina: data.stamina,
+          },
+        },
+      };
+    }
     case 'RefreshActiveTasks': {
       const data = await mockPlayerService.getActiveTasks();
       return {
@@ -289,6 +299,12 @@ async function handleGraphqlMock(operationName: string, variables?: Record<strin
       const topics = variables?.topics as any[];
       await mockPlayerService.savePlayerTopics({ playerTaskTopics: topics });
       return { savePlayerTopics: true };
+    }
+    case 'SavePlayerTopicsAndGenerate': {
+      const topics = variables?.topics as any[];
+      await mockPlayerService.savePlayerTopics({ playerTaskTopics: topics });
+      await mockPlayerService.generateTasks();
+      return { savePlayerTopics: true, generateTasks: true };
     }
     case 'UpdateUserLocale': {
       const locale = variables?.locale as { tag: string; isManual: boolean };
