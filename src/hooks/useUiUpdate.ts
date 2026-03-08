@@ -5,7 +5,7 @@ type VersionPayload = {
   timestamp?: string;
 };
 
-type UpdateReason = 'version_changed' | 'chunk_load_error';
+export type UpdateReason = 'version_changed' | 'chunk_load_error';
 
 const DEFAULT_POLL_INTERVAL_MS = 60_000; // 1 min
 
@@ -24,8 +24,10 @@ async function fetchVersion(signal?: AbortSignal): Promise<VersionPayload | null
 
 function normalizeVersion(v: VersionPayload | null): string | null {
   if (!v) return null;
-  // Prefer buildHash, fallback to timestamp (still good enough to detect rollouts)
-  const key = (v.buildHash && String(v.buildHash).trim()) || (v.timestamp && String(v.timestamp).trim());
+  // Combine buildHash + timestamp so even same-commit rebuilds are detected
+  const hash = (v.buildHash && String(v.buildHash).trim()) || '';
+  const ts = (v.timestamp && String(v.timestamp).trim()) || '';
+  const key = [hash, ts].filter(Boolean).join('_');
   return key || null;
 }
 
@@ -57,6 +59,7 @@ function isChunkLoadError(err: unknown): boolean {
 
 export function useUiUpdate(pollIntervalMs: number = DEFAULT_POLL_INTERVAL_MS) {
   const initialVersionRef = useRef<string | null>(null);
+  const initDoneRef = useRef(false);
   const [isUpdateAvailable, setIsUpdateAvailable] = useState(false);
   const [reason, setReason] = useState<UpdateReason | null>(null);
 
@@ -66,28 +69,10 @@ export function useUiUpdate(pollIntervalMs: number = DEFAULT_POLL_INTERVAL_MS) {
   }, []);
 
   const refreshNow = useCallback(() => {
-    // Hard reload to ensure HTML + chunks are from the same build
     window.location.reload();
   }, []);
 
-  useEffect(() => {
-    let mounted = true;
-    const controller = new AbortController();
-
-    const init = async () => {
-      const v = await fetchVersion(controller.signal);
-      if (!mounted) return;
-      initialVersionRef.current = normalizeVersion(v);
-    };
-
-    init();
-
-    return () => {
-      mounted = false;
-      controller.abort();
-    };
-  }, []);
-
+  // Single effect: init + polling + chunk error detection
   useEffect(() => {
     if (isUpdateAvailable) return;
 
@@ -95,8 +80,8 @@ export function useUiUpdate(pollIntervalMs: number = DEFAULT_POLL_INTERVAL_MS) {
     const controller = new AbortController();
 
     const tick = async () => {
-      // Don’t spam when tab is hidden (mobile battery + less noise)
       if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
+      if (!initDoneRef.current) return; // wait for init
 
       const current = normalizeVersion(await fetchVersion(controller.signal));
       const initial = initialVersionRef.current;
@@ -105,43 +90,44 @@ export function useUiUpdate(pollIntervalMs: number = DEFAULT_POLL_INTERVAL_MS) {
       }
     };
 
-    // Kick once soon after mount, then interval
-    timer = window.setInterval(tick, pollIntervalMs);
-    window.setTimeout(tick, 5_000);
+    // Init: fetch initial version, then start polling
+    (async () => {
+      const v = await fetchVersion(controller.signal);
+      if (controller.signal.aborted) return;
+      initialVersionRef.current = normalizeVersion(v);
+      initDoneRef.current = true;
+
+      // Start polling after init is done
+      timer = window.setInterval(tick, pollIntervalMs);
+      // First check after 5s
+      window.setTimeout(tick, 5_000);
+    })();
 
     const onFocus = () => tick();
     window.addEventListener('focus', onFocus);
 
-    return () => {
-      if (timer) window.clearInterval(timer);
-      controller.abort();
-      window.removeEventListener('focus', onFocus);
-    };
-  }, [isUpdateAvailable, pollIntervalMs, triggerUpdate]);
-
-  useEffect(() => {
-    if (isUpdateAvailable) return;
-
+    // Chunk load error listeners
     const onWindowError = (event: ErrorEvent) => {
       if (isChunkLoadError(event.error)) {
         triggerUpdate('chunk_load_error');
       }
     };
-
     const onUnhandledRejection = (event: PromiseRejectionEvent) => {
       if (isChunkLoadError(event.reason)) {
         triggerUpdate('chunk_load_error');
       }
     };
-
     window.addEventListener('error', onWindowError);
     window.addEventListener('unhandledrejection', onUnhandledRejection);
 
     return () => {
+      if (timer) window.clearInterval(timer);
+      controller.abort();
+      window.removeEventListener('focus', onFocus);
       window.removeEventListener('error', onWindowError);
       window.removeEventListener('unhandledrejection', onUnhandledRejection);
     };
-  }, [isUpdateAvailable, triggerUpdate]);
+  }, [isUpdateAvailable, pollIntervalMs, triggerUpdate]);
 
   return {
     isUpdateAvailable,
@@ -149,5 +135,3 @@ export function useUiUpdate(pollIntervalMs: number = DEFAULT_POLL_INTERVAL_MS) {
     refreshNow,
   };
 }
-
-

@@ -70,7 +70,7 @@ export function useWebSocketNotifications({ enabled, authPromise }: UseWebSocket
     // Функция для обработки обновления локализации
     const handleLocaleUpdate = async () => {
       try {
-        const { me } = await gqlSdk.GetAppData();
+        const { me } = await gqlSdk.GetUserLocale();
         applyLocale(me.locale, updateSettings);
         console.log('[WS][Locale] Updated locale from server via WebSocket notification');
       } catch (error) {

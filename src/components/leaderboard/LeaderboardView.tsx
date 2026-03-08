@@ -214,268 +214,119 @@ const LeaderboardView: React.FC<LeaderboardViewProps> = ({
     }
   };
 
-  // Вспомогательные функции для получения стилей топ-3 через switch case
-  const getTopThreeBackground = (position: number, isTopThree: boolean): string => {
-    if (!isTopThree) {
-      return 'rgba(255, 255, 255, 0.09)';
-    }
-    switch (position) {
-      case 1:
-        return 'linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(255, 165, 0, 0.15) 50%, rgba(255, 200, 0, 0.1) 100%)';
-      case 2:
-        return 'linear-gradient(135deg, rgba(192, 192, 192, 0.2) 0%, rgba(160, 160, 160, 0.15) 50%, rgba(200, 200, 200, 0.1) 100%)';
-      case 3:
-        return 'linear-gradient(135deg, rgba(205, 127, 50, 0.2) 0%, rgba(160, 82, 45, 0.15) 50%, rgba(220, 150, 80, 0.1) 100%)';
-      default:
-        return 'rgba(255, 255, 255, 0.09)';
-    }
+  // ── Position Style Config ──────────────────────────────────────────────────
+  type PositionStyle = {
+    rgb: [number, number, number];
+    cardBg: string;
+    cardBorder: string;
+    cardShadow: string;
+    labelColor: string;
+    labelTextShadow: string;
+    positionBg: string;
+    positionBorder: string;
+    positionColor: string;
+    positionShadow: string;
+    avatarBorder: string;
+    avatarShadow: string;
+    avatarPlaceholderBg: string;
+    nameTextShadow: string;
   };
 
-  const getTopThreeBorder = (position: number, isTopThree: boolean): string => {
-    if (!isTopThree) {
-      return position === 0 ? '2px solid rgba(180, 220, 240, 0.5)' : '1px solid rgba(255, 255, 255, 0.12)';
-    }
-    switch (position) {
-      case 1:
-        return '2px solid rgba(255, 215, 0, 0.6)';
-      case 2:
-        return '2px solid rgba(192, 192, 192, 0.6)';
-      case 3:
-        return '2px solid rgba(205, 127, 50, 0.6)';
-      default:
-        return '1px solid rgba(255, 255, 255, 0.12)';
-    }
+  const rgba = (r: number, g: number, b: number, a: number) => `rgba(${r}, ${g}, ${b}, ${a})`;
+
+  const makeRankedStyle = (r: number, g: number, b: number): PositionStyle => ({
+    rgb: [r, g, b],
+    cardBg: rgba(r, g, b, 0.07),
+    cardBorder: `1px solid ${rgba(r, g, b, 0.25)}`,
+    cardShadow: 'none',
+    labelColor: rgba(r, g, b, 0.9),
+    labelTextShadow: 'none',
+    positionBg: rgba(r, g, b, 0.18),
+    positionBorder: `1px solid ${rgba(r, g, b, 0.45)}`,
+    positionColor: `rgb(${r}, ${g}, ${b})`,
+    positionShadow: 'none',
+    avatarBorder: `2px solid ${rgba(r, g, b, 0.35)}`,
+    avatarShadow: 'none',
+    avatarPlaceholderBg: rgba(r, g, b, 0.14),
+    nameTextShadow: 'none',
+  });
+
+  const POSITION_STYLES: Record<number, PositionStyle> = {
+    1: {
+      rgb: [220, 160, 255],
+      cardBg: 'linear-gradient(135deg, rgba(255, 100, 200, 0.18) 0%, rgba(160, 120, 255, 0.16) 25%, rgba(100, 200, 255, 0.15) 50%, rgba(80, 255, 180, 0.15) 75%, rgba(255, 200, 100, 0.18) 100%)',
+      cardBorder: '2px solid rgba(200, 160, 255, 0.6)',
+      cardShadow: '0 0 25px rgba(255, 100, 200, 0.35), 0 0 45px rgba(130, 100, 255, 0.25), 0 0 60px rgba(100, 200, 255, 0.15), inset 0 0 30px rgba(200, 160, 255, 0.08)',
+      labelColor: 'rgba(220, 180, 255, 0.95)',
+      labelTextShadow: '0 0 10px rgba(200, 160, 255, 0.8)',
+      positionBg: 'linear-gradient(135deg, rgba(255, 120, 200, 0.5) 0%, rgba(160, 120, 255, 0.45) 25%, rgba(100, 210, 255, 0.45) 50%, rgba(80, 255, 180, 0.45) 75%, rgba(255, 210, 100, 0.5) 100%)',
+      positionBorder: '2px solid rgba(200, 160, 255, 0.8)',
+      positionColor: '#e8d5ff',
+      positionShadow: '0 0 20px rgba(255, 100, 200, 0.4), 0 0 30px rgba(130, 100, 255, 0.3), inset 0 0 15px rgba(200, 160, 255, 0.1)',
+      avatarBorder: '2px solid rgba(200, 160, 255, 0.6)',
+      avatarShadow: '0 0 12px rgba(255, 100, 200, 0.4), 0 0 20px rgba(130, 100, 255, 0.3)',
+      avatarPlaceholderBg: 'linear-gradient(135deg, rgba(255, 120, 200, 0.3) 0%, rgba(130, 100, 255, 0.25) 50%, rgba(100, 210, 255, 0.2) 100%)',
+      nameTextShadow: '0 0 6px rgba(200, 160, 255, 0.4)',
+    },
+    2: {
+      rgb: [52, 211, 153],
+      cardBg: 'linear-gradient(135deg, rgba(40, 230, 160, 0.18) 0%, rgba(16, 185, 129, 0.15) 50%, rgba(52, 211, 153, 0.12) 100%)',
+      cardBorder: '2px solid rgba(52, 211, 153, 0.6)',
+      cardShadow: '0 0 25px rgba(52, 211, 153, 0.4), 0 0 45px rgba(16, 185, 129, 0.25), inset 0 0 30px rgba(40, 230, 160, 0.08)',
+      labelColor: 'rgba(80, 230, 170, 0.95)',
+      labelTextShadow: '0 0 10px rgba(52, 211, 153, 0.7)',
+      positionBg: 'linear-gradient(135deg, rgba(40, 230, 160, 0.5) 0%, rgba(16, 185, 129, 0.45) 50%, rgba(52, 211, 153, 0.4) 100%)',
+      positionBorder: '2px solid rgba(52, 211, 153, 0.8)',
+      positionColor: '#5eead4',
+      positionShadow: '0 0 20px rgba(52, 211, 153, 0.5), 0 0 30px rgba(16, 185, 129, 0.3), inset 0 0 15px rgba(40, 230, 160, 0.1)',
+      avatarBorder: '2px solid rgba(52, 211, 153, 0.6)',
+      avatarShadow: '0 0 12px rgba(52, 211, 153, 0.4), 0 0 20px rgba(16, 185, 129, 0.3)',
+      avatarPlaceholderBg: 'linear-gradient(135deg, rgba(40, 230, 160, 0.3) 0%, rgba(16, 185, 129, 0.25) 100%)',
+      nameTextShadow: '0 0 6px rgba(52, 211, 153, 0.4)',
+    },
+    3: {
+      rgb: [180, 30, 50],
+      cardBg: 'linear-gradient(135deg, rgba(180, 30, 50, 0.22) 0%, rgba(140, 20, 40, 0.17) 50%, rgba(100, 15, 30, 0.12) 100%)',
+      cardBorder: '2px solid rgba(180, 30, 50, 0.6)',
+      cardShadow: '0 0 25px rgba(180, 30, 50, 0.4), 0 0 45px rgba(140, 20, 40, 0.25), inset 0 0 30px rgba(200, 40, 60, 0.08)',
+      labelColor: 'rgba(220, 70, 90, 0.95)',
+      labelTextShadow: '0 0 10px rgba(180, 30, 50, 0.7)',
+      positionBg: 'linear-gradient(135deg, rgba(200, 40, 60, 0.55) 0%, rgba(160, 25, 45, 0.5) 50%, rgba(130, 20, 35, 0.45) 100%)',
+      positionBorder: '2px solid rgba(180, 30, 50, 0.8)',
+      positionColor: '#e05060',
+      positionShadow: '0 0 20px rgba(180, 30, 50, 0.5), 0 0 30px rgba(140, 20, 40, 0.3), inset 0 0 15px rgba(200, 40, 60, 0.1)',
+      avatarBorder: '2px solid rgba(180, 30, 50, 0.6)',
+      avatarShadow: '0 0 12px rgba(180, 30, 50, 0.4), 0 0 20px rgba(140, 20, 40, 0.3)',
+      avatarPlaceholderBg: 'linear-gradient(135deg, rgba(200, 40, 60, 0.3) 0%, rgba(140, 20, 40, 0.25) 100%)',
+      nameTextShadow: '0 0 6px rgba(180, 30, 50, 0.4)',
+    },
+    4:  makeRankedStyle(245, 158, 11),  // Amber
+    5:  makeRankedStyle(59, 130, 246),  // Blue
+    6:  makeRankedStyle(168, 85, 247),  // Violet
+    7:  makeRankedStyle(236, 72, 153),  // Pink
+    8:  makeRankedStyle(6, 182, 212),   // Cyan
+    9:  makeRankedStyle(249, 115, 22),  // Orange
+    10: makeRankedStyle(99, 102, 241),  // Indigo
   };
 
-  const getTopThreeBoxShadow = (position: number, isTopThree: boolean, isCurrentUser: boolean = false): string => {
-    if (!isTopThree) {
-      if (isCurrentUser) {
-        return '0 0 25px rgba(180, 220, 240, 0.4), inset 0 0 25px rgba(200, 230, 245, 0.08), 0 0 40px rgba(180, 220, 240, 0.2)';
-      }
-      return '0 0 15px rgba(180, 220, 240, 0.1), inset 0 0 20px rgba(200, 230, 245, 0.02)';
-    }
-    switch (position) {
-      case 1:
-        return '0 0 30px rgba(255, 215, 0, 0.5), inset 0 0 30px rgba(255, 215, 0, 0.1), 0 0 50px rgba(255, 165, 0, 0.3)';
-      case 2:
-        return '0 0 30px rgba(192, 192, 192, 0.5), inset 0 0 30px rgba(192, 192, 192, 0.1), 0 0 50px rgba(160, 160, 160, 0.3)';
-      case 3:
-        return '0 0 30px rgba(205, 127, 50, 0.5), inset 0 0 30px rgba(205, 127, 50, 0.1), 0 0 50px rgba(160, 82, 45, 0.3)';
-      default:
-        return '0 0 15px rgba(180, 220, 240, 0.1), inset 0 0 20px rgba(200, 230, 245, 0.02)';
-    }
+  const DEFAULT_STYLE: PositionStyle = {
+    rgb: [180, 220, 240],
+    cardBg: 'rgba(255, 255, 255, 0.09)',
+    cardBorder: '1px solid rgba(255, 255, 255, 0.12)',
+    cardShadow: '0 0 10px rgba(180, 220, 240, 0.08), inset 0 0 15px rgba(200, 230, 245, 0.02)',
+    labelColor: 'rgba(180, 220, 240, 0.9)',
+    labelTextShadow: 'none',
+    positionBg: 'rgba(220, 235, 245, 0.1)',
+    positionBorder: '1px solid rgba(255, 255, 255, 0.12)',
+    positionColor: '#f4f4f5',
+    positionShadow: 'none',
+    avatarBorder: '2px solid rgba(180, 220, 240, 0.4)',
+    avatarShadow: 'none',
+    avatarPlaceholderBg: 'linear-gradient(135deg, rgba(180, 220, 240, 0.3) 0%, rgba(160, 210, 235, 0.2) 100%)',
+    nameTextShadow: 'none',
   };
 
-  const getTopThreeLabelColor = (position: number, isTopThree: boolean): string => {
-    if (!isTopThree) {
-      return 'rgba(180, 220, 240, 0.9)';
-    }
-    switch (position) {
-      case 1:
-        return 'rgba(255, 215, 0, 0.95)';
-      case 2:
-        return 'rgba(192, 192, 192, 0.95)';
-      case 3:
-        return 'rgba(205, 127, 50, 0.95)';
-      default:
-        return 'rgba(180, 220, 240, 0.9)';
-    }
-  };
-
-  const getTopThreeLabelTextShadow = (position: number, isTopThree: boolean): string => {
-    if (!isTopThree) {
-      return '0 0 8px rgba(180, 220, 240, 0.5)';
-    }
-    switch (position) {
-      case 1:
-        return '0 0 10px rgba(255, 215, 0, 0.8)';
-      case 2:
-        return '0 0 10px rgba(192, 192, 192, 0.8)';
-      case 3:
-        return '0 0 10px rgba(205, 127, 50, 0.8)';
-      default:
-        return '0 0 8px rgba(180, 220, 240, 0.5)';
-    }
-  };
-
-  const getTopThreePositionBackground = (position: number, isTopThree: boolean): string => {
-    if (!isTopThree) {
-      return 'linear-gradient(135deg, rgba(180, 220, 240, 0.3) 0%, rgba(160, 210, 235, 0.2) 100%)';
-    }
-    switch (position) {
-      case 1:
-        return 'linear-gradient(135deg, rgba(255, 215, 0, 0.4) 0%, rgba(255, 165, 0, 0.3) 100%)';
-      case 2:
-        return 'linear-gradient(135deg, rgba(192, 192, 192, 0.4) 0%, rgba(160, 160, 160, 0.3) 100%)';
-      case 3:
-        return 'linear-gradient(135deg, rgba(205, 127, 50, 0.4) 0%, rgba(160, 82, 45, 0.3) 100%)';
-      default:
-        return 'linear-gradient(135deg, rgba(180, 220, 240, 0.3) 0%, rgba(160, 210, 235, 0.2) 100%)';
-    }
-  };
-
-  const getTopThreePositionBorder = (position: number, isTopThree: boolean): string => {
-    if (!isTopThree) {
-      return '2px solid rgba(180, 220, 240, 0.6)';
-    }
-    switch (position) {
-      case 1:
-        return '2px solid rgba(255, 215, 0, 0.8)';
-      case 2:
-        return '2px solid rgba(192, 192, 192, 0.8)';
-      case 3:
-        return '2px solid rgba(205, 127, 50, 0.8)';
-      default:
-        return '2px solid rgba(180, 220, 240, 0.6)';
-    }
-  };
-
-  const getTopThreePositionColor = (position: number, isTopThree: boolean): string => {
-    if (!isTopThree) {
-      return '#f4f4f5';
-    }
-    switch (position) {
-      case 1:
-        return '#FFD700';
-      case 2:
-        return '#C0C0C0';
-      case 3:
-        return '#CD7F32';
-      default:
-        return '#f4f4f5';
-    }
-  };
-
-  const getTopThreePositionBoxShadow = (position: number, isTopThree: boolean): string => {
-    if (!isTopThree) {
-      return '0 0 15px rgba(180, 220, 240, 0.4), inset 0 0 10px rgba(200, 230, 245, 0.1)';
-    }
-    switch (position) {
-      case 1:
-        return '0 0 25px rgba(255, 215, 0, 0.6), inset 0 0 20px rgba(255, 215, 0, 0.15)';
-      case 2:
-        return '0 0 25px rgba(192, 192, 192, 0.6), inset 0 0 20px rgba(192, 192, 192, 0.15)';
-      case 3:
-        return '0 0 25px rgba(205, 127, 50, 0.6), inset 0 0 20px rgba(205, 127, 50, 0.15)';
-      default:
-        return '0 0 15px rgba(180, 220, 240, 0.4), inset 0 0 10px rgba(200, 230, 245, 0.1)';
-    }
-  };
-
-  const getTopThreeAvatarBorder = (position: number, isTopThree: boolean): string => {
-    if (!isTopThree) {
-      return '2px solid rgba(180, 220, 240, 0.4)';
-    }
-    switch (position) {
-      case 1:
-        return '2px solid rgba(255, 215, 0, 0.6)';
-      case 2:
-        return '2px solid rgba(192, 192, 192, 0.6)';
-      case 3:
-        return '2px solid rgba(205, 127, 50, 0.6)';
-      default:
-        return '2px solid rgba(180, 220, 240, 0.4)';
-    }
-  };
-
-  const getTopThreeAvatarBoxShadow = (position: number, isTopThree: boolean): string => {
-    if (!isTopThree) {
-      return '0 0 10px rgba(180, 220, 240, 0.3)';
-    }
-    switch (position) {
-      case 1:
-        return '0 0 15px rgba(255, 215, 0, 0.5)';
-      case 2:
-        return '0 0 15px rgba(192, 192, 192, 0.5)';
-      case 3:
-        return '0 0 15px rgba(205, 127, 50, 0.5)';
-      default:
-        return '0 0 10px rgba(180, 220, 240, 0.3)';
-    }
-  };
-
-  const getTopThreeAvatarPlaceholderBackground = (position: number, isTopThree: boolean): string => {
-    if (!isTopThree) {
-      return 'linear-gradient(135deg, rgba(180, 220, 240, 0.3) 0%, rgba(160, 210, 235, 0.2) 100%)';
-    }
-    switch (position) {
-      case 1:
-        return 'linear-gradient(135deg, rgba(255, 215, 0, 0.3) 0%, rgba(255, 165, 0, 0.2) 100%)';
-      case 2:
-        return 'linear-gradient(135deg, rgba(192, 192, 192, 0.3) 0%, rgba(160, 160, 160, 0.2) 100%)';
-      case 3:
-        return 'linear-gradient(135deg, rgba(205, 127, 50, 0.3) 0%, rgba(160, 82, 45, 0.2) 100%)';
-      default:
-        return 'linear-gradient(135deg, rgba(180, 220, 240, 0.3) 0%, rgba(160, 210, 235, 0.2) 100%)';
-    }
-  };
-
-  const getTopThreeNameTextShadow = (position: number, isTopThree: boolean): string => {
-    if (!isTopThree) {
-      return '0 0 4px rgba(180, 220, 240, 0.2)';
-    }
-    switch (position) {
-      case 1:
-        return '0 0 6px rgba(255, 215, 0, 0.4)';
-      case 2:
-        return '0 0 6px rgba(192, 192, 192, 0.4)';
-      case 3:
-        return '0 0 6px rgba(205, 127, 50, 0.4)';
-      default:
-        return '0 0 4px rgba(180, 220, 240, 0.2)';
-    }
-  };
-
-  const getTopThreeIconColor = (position: number, isTopThree: boolean): string => {
-    if (!isTopThree) {
-      return 'rgba(180, 220, 240, 1)';
-    }
-    switch (position) {
-      case 1:
-        return 'rgba(255, 215, 0, 1)';
-      case 2:
-        return 'rgba(192, 192, 192, 1)';
-      case 3:
-        return 'rgba(205, 127, 50, 1)';
-      default:
-        return 'rgba(180, 220, 240, 1)';
-    }
-  };
-
-  const getTopThreeIconFilter = (position: number, isTopThree: boolean, isCurrentUser: boolean = false): string => {
-    if (!isTopThree) {
-      if (isCurrentUser) {
-        return 'drop-shadow(0 0 12px rgba(180, 220, 240, 0.8)) drop-shadow(0 0 20px rgba(160, 210, 235, 0.4))';
-      }
-      return '';
-    }
-    switch (position) {
-      case 1:
-        return 'drop-shadow(0 0 15px rgba(255, 215, 0, 0.9)) drop-shadow(0 0 25px rgba(255, 165, 0, 0.5))';
-      case 2:
-        return 'drop-shadow(0 0 15px rgba(192, 192, 192, 0.9)) drop-shadow(0 0 25px rgba(160, 160, 160, 0.5))';
-      case 3:
-        return 'drop-shadow(0 0 15px rgba(205, 127, 50, 0.9)) drop-shadow(0 0 25px rgba(160, 82, 45, 0.5))';
-      default:
-        return '';
-    }
-  };
-
-  const getTopThreeListPositionBoxShadow = (position: number, isTopThree: boolean): string => {
-    if (!isTopThree) {
-      return 'none';
-    }
-    switch (position) {
-      case 1:
-        return '0 0 20px rgba(255, 215, 0, 0.5), inset 0 0 15px rgba(255, 215, 0, 0.1)';
-      case 2:
-        return '0 0 20px rgba(192, 192, 192, 0.5), inset 0 0 15px rgba(192, 192, 192, 0.1)';
-      case 3:
-        return '0 0 20px rgba(205, 127, 50, 0.5), inset 0 0 15px rgba(205, 127, 50, 0.1)';
-      default:
-        return 'none';
-    }
-  };
+  const getStyle = (position: number): PositionStyle => POSITION_STYLES[position] ?? DEFAULT_STYLE;
 
 
   return (
@@ -527,7 +378,6 @@ const LeaderboardView: React.FC<LeaderboardViewProps> = ({
 
       {/* Current User Card - Sticky at top */}
       {currentUser && (() => {
-        const isTopThree = currentUser.position <= 3;
         const position = currentUser.position;
         
         const formatPosition = (pos: number): string => {
@@ -555,18 +405,18 @@ const LeaderboardView: React.FC<LeaderboardViewProps> = ({
               onClick={() => onUserClick?.(currentUser.id)}
               className="w-full rounded-xl p-4 transition-all duration-300 hover:scale-[1.02] text-left"
               style={{
-                background: getTopThreeBackground(position, isTopThree),
+                background: getStyle(position).cardBg,
                 backdropFilter: 'blur(20px)',
-                border: getTopThreeBorder(position, isTopThree),
-                boxShadow: getTopThreeBoxShadow(position, isTopThree, true)
+                border: getStyle(position).cardBorder,
+                boxShadow: getStyle(position).cardShadow
               }}
             >
               {/* Label inside card */}
               <div
                 className="text-xs font-tech mb-2 px-1"
                 style={{
-                  color: getTopThreeLabelColor(position, isTopThree),
-                  textShadow: getTopThreeLabelTextShadow(position, isTopThree),
+                  color: getStyle(position).labelColor,
+                  textShadow: getStyle(position).labelTextShadow,
                   letterSpacing: '0.05em'
                 }}
               >
@@ -577,11 +427,11 @@ const LeaderboardView: React.FC<LeaderboardViewProps> = ({
                 <div
                   className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-tech font-bold"
                   style={{
-                    background: getTopThreePositionBackground(position, isTopThree),
-                    border: getTopThreePositionBorder(position, isTopThree),
-                    color: getTopThreePositionColor(position, isTopThree),
+                    background: getStyle(position).positionBg,
+                    border: getStyle(position).positionBorder,
+                    color: getStyle(position).positionColor,
                     backdropFilter: 'blur(10px)',
-                    boxShadow: getTopThreePositionBoxShadow(position, isTopThree),
+                    boxShadow: getStyle(position).positionShadow,
                     fontSize: positionFontSize
                   }}
                 >
@@ -592,8 +442,8 @@ const LeaderboardView: React.FC<LeaderboardViewProps> = ({
               <div
                 className="flex-shrink-0 w-12 h-12 rounded-full overflow-hidden"
                 style={{
-                  border: getTopThreeAvatarBorder(position, isTopThree),
-                  boxShadow: getTopThreeAvatarBoxShadow(position, isTopThree)
+                  border: getStyle(position).avatarBorder,
+                  boxShadow: getStyle(position).avatarShadow
                 }}
               >
                 {currentUser.photoUrl ? (
@@ -606,7 +456,7 @@ const LeaderboardView: React.FC<LeaderboardViewProps> = ({
                   <div
                     className="w-full h-full flex items-center justify-center"
                     style={{
-                      background: getTopThreeAvatarPlaceholderBackground(position, isTopThree)
+                      background: getStyle(position).avatarPlaceholderBg
                     }}
                   >
                     <Icon type="user" size={24} />
@@ -620,7 +470,7 @@ const LeaderboardView: React.FC<LeaderboardViewProps> = ({
                     className="font-tech font-semibold text-base mb-1 truncate"
                     style={{
                       color: '#f4f4f5',
-                      textShadow: getTopThreeNameTextShadow(position, isTopThree)
+                      textShadow: getStyle(position).nameTextShadow
                     }}
                   >
                     {currentUser.firstName} {currentUser.lastName || ''}
@@ -635,16 +485,6 @@ const LeaderboardView: React.FC<LeaderboardViewProps> = ({
                   </div>
                 </div>
 
-                {/* Highlight Icon */}
-                <div
-                  className="flex-shrink-0"
-                  style={{
-                    color: getTopThreeIconColor(position, isTopThree),
-                    filter: getTopThreeIconFilter(position, isTopThree, true)
-                  }}
-                >
-                  <Icon type={isTopThree ? "trophy" : "award"} size={24} />
-                </div>
               </div>
             </button>
           </div>
@@ -835,35 +675,31 @@ const LeaderboardView: React.FC<LeaderboardViewProps> = ({
               transition: 'opacity 0.15s ease-out, transform 0.15s ease-out'
             }}
           >
-            {leaderboard.map((user, index) => {
-              const isTopThree = index < 3;
+            {leaderboard.map((user) => {
               const position = user.position;
-              // Форматируем позицию для больших чисел
+              const s = getStyle(position);
               const formatPosition = (pos: number): string => {
-                if (pos > 9999) {
-                  return `${Math.floor(pos / 1000)}k`;
-                } else if (pos > 999) {
-                  return `${(pos / 1000).toFixed(1)}k`;
-                }
+                if (pos > 9999) return `${Math.floor(pos / 1000)}k`;
+                if (pos > 999) return `${(pos / 1000).toFixed(1)}k`;
                 return pos.toString();
               };
               const formattedPosition = formatPosition(position);
-              const positionFontSize = position > 9999 
-                ? '0.75rem' 
-                : position > 999 
-                ? '0.875rem' 
+              const positionFontSize = position > 9999
+                ? '0.75rem'
+                : position > 999
+                ? '0.875rem'
                 : '1.125rem';
-              
+
               return (
                 <button
                   key={user.id}
                   onClick={() => onUserClick?.(user.id)}
                   className="w-full rounded-xl p-4 transition-all duration-300 hover:scale-[1.02] text-left"
                   style={{
-                    background: getTopThreeBackground(position, isTopThree),
+                    background: s.cardBg,
                     backdropFilter: 'blur(20px)',
-                    border: getTopThreeBorder(position, isTopThree),
-                    boxShadow: getTopThreeBoxShadow(position, isTopThree)
+                    border: s.cardBorder,
+                    boxShadow: s.cardShadow
                   }}
                 >
                   <div className="flex items-center space-x-4">
@@ -871,16 +707,10 @@ const LeaderboardView: React.FC<LeaderboardViewProps> = ({
                     <div
                       className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-tech font-bold"
                       style={{
-                        background: isTopThree 
-                          ? getTopThreePositionBackground(position, isTopThree)
-                          : 'rgba(220, 235, 245, 0.1)',
-                        border: isTopThree
-                          ? getTopThreePositionBorder(position, isTopThree)
-                          : '1px solid rgba(255, 255, 255, 0.12)',
-                        color: getTopThreePositionColor(position, isTopThree),
-                        boxShadow: isTopThree
-                          ? getTopThreeListPositionBoxShadow(position, isTopThree)
-                          : 'none',
+                        background: s.positionBg,
+                        border: s.positionBorder,
+                        color: s.positionColor,
+                        boxShadow: s.positionShadow,
                         backdropFilter: 'blur(10px)',
                         fontSize: positionFontSize
                       }}
@@ -892,8 +722,8 @@ const LeaderboardView: React.FC<LeaderboardViewProps> = ({
                     <div
                       className="flex-shrink-0 w-12 h-12 rounded-full overflow-hidden"
                       style={{
-                        border: getTopThreeAvatarBorder(position, isTopThree),
-                        boxShadow: getTopThreeAvatarBoxShadow(position, isTopThree)
+                        border: s.avatarBorder,
+                        boxShadow: s.avatarShadow
                       }}
                     >
                       {user.photoUrl ? (
@@ -906,7 +736,7 @@ const LeaderboardView: React.FC<LeaderboardViewProps> = ({
                         <div
                           className="w-full h-full flex items-center justify-center"
                           style={{
-                            background: getTopThreeAvatarPlaceholderBackground(position, isTopThree)
+                            background: s.avatarPlaceholderBg
                           }}
                         >
                           <Icon type="user" size={24} />
@@ -920,7 +750,7 @@ const LeaderboardView: React.FC<LeaderboardViewProps> = ({
                         className="font-tech font-semibold text-base mb-1 truncate"
                         style={{
                           color: '#f4f4f5',
-                          textShadow: getTopThreeNameTextShadow(position, isTopThree)
+                          textShadow: s.nameTextShadow
                         }}
                       >
                         {user.firstName} {user.lastName || ''}
@@ -935,18 +765,6 @@ const LeaderboardView: React.FC<LeaderboardViewProps> = ({
                       </div>
                     </div>
 
-                    {/* Trophy Icon for top 3 - только для визуального акцента */}
-                    {isTopThree && (
-                      <div
-                        className="flex-shrink-0"
-                        style={{
-                          color: getTopThreeIconColor(position, isTopThree),
-                          filter: getTopThreeIconFilter(position, isTopThree)
-                        }}
-                      >
-                        <Icon type="trophy" size={20} />
-                      </div>
-                    )}
                   </div>
                 </button>
               );

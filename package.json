@@ -41,7 +41,7 @@
   },
   "scripts": {
     "start:dev": "node scripts/generate-version.cjs && VITE_ENV=development vite build && vite preview",
-    "start:mocks": "VITE_USE_MOCKS=true node scripts/generate-version.cjs && VITE_ENV=development vite build && vite preview",
+    "start:mocks": "VITE_USE_MOCKS=true node scripts/generate-version.cjs && VITE_USE_MOCKS=true VITE_ENV=development vite build && vite preview",
     "start:prod": "node scripts/generate-version.cjs && VITE_ENV=production vite build && vite preview",
     "start:watch": "VITE_ENV=development vite build --watch",
     "build": "node scripts/generate-version.cjs && VITE_ENV=production vite build",

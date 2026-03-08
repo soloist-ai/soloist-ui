@@ -139,6 +139,12 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (!isManual) {
       const derived = deriveLanguageFromTelegram(user?.language_code);
       updateSettings({ isManual: false, language: derived });
+      // Persist to backend
+      try {
+        void gqlSdk.UpdateUserLocale({ locale: { tag: derived, isManual: false } });
+      } catch (error) {
+        console.error('Failed to update user locale on backend:', error);
+      }
     } else {
       updateSettings({ isManual: true });
     }

@@ -31,7 +31,12 @@ const DISABLED_TOPICS = new Set([
   TaskTopic.READING, TaskTopic.LANGUAGE_LEARNING,
 ]);
 
-const ALL_TOPICS = Object.values(TaskTopic);
+const ALL_TOPICS = Object.values(TaskTopic).sort((a, b) => {
+  const aDisabled = DISABLED_TOPICS.has(a);
+  const bDisabled = DISABLED_TOPICS.has(b);
+  if (aDisabled !== bDisabled) return aDisabled ? 1 : -1;
+  return a.localeCompare(b);
+});
 
 type TopicsSectionProps = {
   isAuthenticated: boolean;

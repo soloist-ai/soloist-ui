@@ -155,195 +155,182 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({ isOpen, onClose }) => {
 
               <div className="grid grid-cols-2 gap-3 mb-6">
                 {/* Telegram source */}
-                <div
+                <button
                   onClick={() => setIsManual(false)}
-                  className={cn(
-                    "relative p-4 cursor-pointer transition-all duration-200 border-0 shadow-none bg-transparent",
-                    !settings.isManual && "scale-105"
-                  )}
+                  className="relative rounded-2xl p-4 cursor-pointer transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] outline-none select-none"
                   style={{
                     background: !settings.isManual
-                      ? 'linear-gradient(135deg, rgba(180, 220, 240, 0.15) 0%, rgba(160, 210, 235, 0.08) 100%)'
-                      : 'rgba(220, 235, 245, 0.05)',
+                      ? 'linear-gradient(135deg, rgba(180, 220, 240, 0.18) 0%, rgba(160, 210, 235, 0.08) 100%)'
+                      : 'rgba(255, 255, 255, 0.04)',
                     border: !settings.isManual
-                      ? '1px solid rgba(220, 235, 245, 0.4)'
-                      : '1px solid rgba(220, 235, 245, 0.15)',
+                      ? '2px solid rgba(180, 220, 240, 0.4)'
+                      : '2px solid rgba(220, 235, 245, 0.12)',
                     boxShadow: !settings.isManual
-                      ? '0 0 15px rgba(180, 220, 240, 0.2)'
+                      ? '0 0 20px rgba(180, 220, 240, 0.2), inset 0 0 12px rgba(180, 220, 240, 0.05)'
                       : 'none'
                   }}
                 >
                   <div className="text-center">
-                    <div className="flex items-center justify-center mb-2">
-                      <div
-                        style={{
-                          color: !settings.isManual ? '#e8f4f8' : 'rgba(220, 235, 245, 0.6)',
-                          filter: !settings.isManual ? 'drop-shadow(0 0 6px rgba(180, 220, 240, 0.5))' : 'none'
-                        }}
-                      >
+                    <div className="flex items-center justify-center mb-3">
+                      <div style={{
+                        color: !settings.isManual ? '#e8f4f8' : 'rgba(220, 235, 245, 0.5)',
+                        filter: !settings.isManual ? 'drop-shadow(0 0 6px rgba(180, 220, 240, 0.5))' : 'none'
+                      }}>
                         <TelegramIcon className="w-6 h-6" />
                       </div>
                     </div>
-                    <div 
+                    <div
                       className="font-tech text-xs font-semibold"
                       style={{
-                        color: !settings.isManual ? '#e8f4f8' : 'rgba(220, 235, 245, 0.6)'
+                        color: !settings.isManual ? '#e8f4f8' : 'rgba(220, 235, 245, 0.5)',
+                        textShadow: !settings.isManual ? '0 0 6px rgba(180, 220, 240, 0.3)' : 'none'
                       }}
                     >
                       {t('profile.settings.language.useTelegram')}
                     </div>
                   </div>
                   {!settings.isManual && (
-                    <div 
-                      className="absolute top-2 right-2 w-2 h-2 rounded-full"
+                    <div
+                      className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full"
                       style={{
-                        background: '#e8f4f8',
-                        boxShadow: '0 0 8px rgba(180, 220, 240, 0.8)'
+                        background: 'rgba(34, 197, 94, 0.9)',
+                        boxShadow: '0 0 8px rgba(34, 197, 94, 0.6)'
                       }}
-                    ></div>
+                    />
                   )}
-                </div>
+                </button>
 
                 {/* Manual source */}
-                <div
+                <button
                   onClick={() => setIsManual(true)}
-                  className={cn(
-                    "relative p-4 cursor-pointer transition-all duration-200 border-0 shadow-none bg-transparent",
-                    settings.isManual && "scale-105"
-                  )}
+                  className="relative rounded-2xl p-4 cursor-pointer transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] outline-none select-none"
                   style={{
                     background: settings.isManual
-                      ? 'linear-gradient(135deg, rgba(180, 220, 240, 0.15) 0%, rgba(160, 210, 235, 0.08) 100%)'
-                      : 'rgba(220, 235, 245, 0.05)',
+                      ? 'linear-gradient(135deg, rgba(180, 220, 240, 0.18) 0%, rgba(160, 210, 235, 0.08) 100%)'
+                      : 'rgba(255, 255, 255, 0.04)',
                     border: settings.isManual
-                      ? '1px solid rgba(220, 235, 245, 0.4)'
-                      : '1px solid rgba(220, 235, 245, 0.15)',
+                      ? '2px solid rgba(180, 220, 240, 0.4)'
+                      : '2px solid rgba(220, 235, 245, 0.12)',
                     boxShadow: settings.isManual
-                      ? '0 0 15px rgba(180, 220, 240, 0.2)'
+                      ? '0 0 20px rgba(180, 220, 240, 0.2), inset 0 0 12px rgba(180, 220, 240, 0.05)'
                       : 'none'
                   }}
                 >
                   <div className="text-center">
-                    <div className="flex justify-center items-center mb-2">
-                      <div
-                        className="profile-icon-wrapper"
-                        style={{
-                          color: settings.isManual ? '#e8f4f8' : 'rgba(220, 235, 245, 0.6)',
-                          filter: settings.isManual ? 'drop-shadow(0 0 6px rgba(180, 220, 240, 0.5))' : 'none'
-                        }}
-                      >
+                    <div className="flex justify-center items-center mb-3">
+                      <div style={{
+                        color: settings.isManual ? '#e8f4f8' : 'rgba(220, 235, 245, 0.5)',
+                        filter: settings.isManual ? 'drop-shadow(0 0 6px rgba(180, 220, 240, 0.5))' : 'none'
+                      }}>
                         <Icon type="wrench" size={24} />
                       </div>
                     </div>
-                    <div 
+                    <div
                       className="font-tech text-xs font-semibold"
                       style={{
-                        color: settings.isManual ? '#e8f4f8' : 'rgba(220, 235, 245, 0.6)'
+                        color: settings.isManual ? '#e8f4f8' : 'rgba(220, 235, 245, 0.5)',
+                        textShadow: settings.isManual ? '0 0 6px rgba(180, 220, 240, 0.3)' : 'none'
                       }}
                     >
                       {t('profile.settings.language.chooseManually')}
                     </div>
                   </div>
                   {settings.isManual && (
-                    <div 
-                      className="absolute top-2 right-2 w-2 h-2 rounded-full"
+                    <div
+                      className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full"
                       style={{
-                        background: '#e8f4f8',
-                        boxShadow: '0 0 8px rgba(180, 220, 240, 0.8)'
+                        background: 'rgba(34, 197, 94, 0.9)',
+                        boxShadow: '0 0 8px rgba(34, 197, 94, 0.6)'
                       }}
-                    ></div>
+                    />
                   )}
-                </div>
+                </button>
               </div>
 
               {/* Manual language selection */}
-              <div 
+              <div
                 className={cn(
-                  "grid grid-cols-2 gap-3 transition-opacity duration-300",
-                  !settings.isManual && "opacity-40 pointer-events-none"
+                  "grid grid-cols-2 gap-3 transition-all duration-300",
+                  !settings.isManual && "opacity-30 pointer-events-none"
                 )}
               >
                 {/* Russian */}
-                <div
+                <button
                   onClick={() => setLanguage('ru')}
-                  className={cn(
-                    "relative p-4 cursor-pointer transition-all duration-200 border-0 shadow-none bg-transparent",
-                    settings.language === 'ru' && "scale-105"
-                  )}
+                  className="relative rounded-2xl p-4 cursor-pointer transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] outline-none select-none"
                   style={{
                     background: settings.language === 'ru'
-                      ? 'linear-gradient(135deg, rgba(180, 220, 240, 0.15) 0%, rgba(160, 210, 235, 0.08) 100%)'
-                      : 'rgba(220, 235, 245, 0.05)',
+                      ? 'linear-gradient(135deg, rgba(180, 220, 240, 0.18) 0%, rgba(160, 210, 235, 0.08) 100%)'
+                      : 'rgba(255, 255, 255, 0.04)',
                     border: settings.language === 'ru'
-                      ? '1px solid rgba(220, 235, 245, 0.4)'
-                      : '1px solid rgba(220, 235, 245, 0.15)',
+                      ? '2px solid rgba(180, 220, 240, 0.4)'
+                      : '2px solid rgba(220, 235, 245, 0.12)',
                     boxShadow: settings.language === 'ru'
-                      ? '0 0 15px rgba(180, 220, 240, 0.2)'
+                      ? '0 0 20px rgba(180, 220, 240, 0.2), inset 0 0 12px rgba(180, 220, 240, 0.05)'
                       : 'none'
                   }}
                 >
                   <div className="text-center">
-                    <div className="text-2xl mb-2">🇷🇺</div>
-                    <div 
+                    <div className="text-2xl mb-2 leading-none">🇷🇺</div>
+                    <div
                       className="font-tech text-xs font-semibold"
                       style={{
-                        color: settings.language === 'ru' ? '#e8f4f8' : 'rgba(220, 235, 245, 0.6)'
+                        color: settings.language === 'ru' ? '#e8f4f8' : 'rgba(220, 235, 245, 0.5)',
+                        textShadow: settings.language === 'ru' ? '0 0 6px rgba(180, 220, 240, 0.3)' : 'none'
                       }}
                     >
                       {t('profile.settings.language.russian')}
                     </div>
                   </div>
                   {settings.language === 'ru' && (
-                    <div 
-                      className="absolute top-2 right-2 w-2 h-2 rounded-full"
+                    <div
+                      className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full"
                       style={{
-                        background: '#e8f4f8',
-                        boxShadow: '0 0 8px rgba(180, 220, 240, 0.8)'
+                        background: 'rgba(34, 197, 94, 0.9)',
+                        boxShadow: '0 0 8px rgba(34, 197, 94, 0.6)'
                       }}
-                    ></div>
+                    />
                   )}
-                </div>
+                </button>
 
                 {/* English */}
-                <div
+                <button
                   onClick={() => setLanguage('en')}
-                  className={cn(
-                    "relative p-4 cursor-pointer transition-all duration-200 border-0 shadow-none bg-transparent",
-                    settings.language === 'en' && "scale-105"
-                  )}
+                  className="relative rounded-2xl p-4 cursor-pointer transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] outline-none select-none"
                   style={{
                     background: settings.language === 'en'
-                      ? 'linear-gradient(135deg, rgba(180, 220, 240, 0.15) 0%, rgba(160, 210, 235, 0.08) 100%)'
-                      : 'rgba(220, 235, 245, 0.05)',
+                      ? 'linear-gradient(135deg, rgba(180, 220, 240, 0.18) 0%, rgba(160, 210, 235, 0.08) 100%)'
+                      : 'rgba(255, 255, 255, 0.04)',
                     border: settings.language === 'en'
-                      ? '1px solid rgba(220, 235, 245, 0.4)'
-                      : '1px solid rgba(220, 235, 245, 0.15)',
+                      ? '2px solid rgba(180, 220, 240, 0.4)'
+                      : '2px solid rgba(220, 235, 245, 0.12)',
                     boxShadow: settings.language === 'en'
-                      ? '0 0 15px rgba(180, 220, 240, 0.2)'
+                      ? '0 0 20px rgba(180, 220, 240, 0.2), inset 0 0 12px rgba(180, 220, 240, 0.05)'
                       : 'none'
                   }}
                 >
                   <div className="text-center">
-                    <div className="text-2xl mb-2">🇺🇸</div>
-                    <div 
+                    <div className="text-2xl mb-2 leading-none">🇺🇸</div>
+                    <div
                       className="font-tech text-xs font-semibold"
                       style={{
-                        color: settings.language === 'en' ? '#e8f4f8' : 'rgba(220, 235, 245, 0.6)'
+                        color: settings.language === 'en' ? '#e8f4f8' : 'rgba(220, 235, 245, 0.5)',
+                        textShadow: settings.language === 'en' ? '0 0 6px rgba(180, 220, 240, 0.3)' : 'none'
                       }}
                     >
                       {t('profile.settings.language.english')}
                     </div>
                   </div>
                   {settings.language === 'en' && (
-                    <div 
-                      className="absolute top-2 right-2 w-2 h-2 rounded-full"
+                    <div
+                      className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full"
                       style={{
-                        background: '#e8f4f8',
-                        boxShadow: '0 0 8px rgba(180, 220, 240, 0.8)'
+                        background: 'rgba(34, 197, 94, 0.9)',
+                        boxShadow: '0 0 8px rgba(34, 197, 94, 0.6)'
                       }}
-                    ></div>
+                    />
                   )}
-                </div>
+                </button>
               </div>
             </div>
           </div>

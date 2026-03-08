@@ -16,6 +16,17 @@ query GetAppData {
   }
 }
 
+# ── Locale-only refresh (used by WS locale notification) ─────────────────────
+
+query GetUserLocale {
+  me {
+    locale {
+      tag
+      isManual
+    }
+  }
+}
+
 # ── Targeted refreshes after WS notifications ────────────────────────────────
 
 query RefreshActiveTasks {
@@ -92,6 +103,9 @@ query GetBalanceWithTransactions($paging: PagingInput!, $options: SearchOptionsI
           paging {
             ...ResponsePagingFields
           }
+          options {
+            ...ResponseQueryOptionsFields
+          }
         }
       }
     }
@@ -164,6 +178,9 @@ query GetBalanceTransactions($paging: PagingInput!, $options: SearchOptionsInput
           paging {
             ...ResponsePagingFields
           }
+          options {
+            ...ResponseQueryOptionsFields
+          }
         }
       }
     }
@@ -179,6 +196,9 @@ query GetClosedTasks($paging: PagingInput!, $options: SearchOptionsInput) {
         }
         paging {
           ...ResponsePagingFields
+        }
+        options {
+          ...ResponseQueryOptionsFields
         }
       }
     }

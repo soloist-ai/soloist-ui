@@ -56,6 +56,9 @@ const BalanceTab: React.FC<BalanceTabProps> = ({ isAuthenticated }) => {
         transactions: balance.transactions.transactions as GqlTransaction[],
         paging: balance.transactions.paging,
       });
+      if (balance.transactions.options?.filters) {
+        setAvailableFilters(balance.transactions.options.filters);
+      }
       setTimeout(() => {
         setContentLoaded(true);
         setBalanceLoaded(true);
@@ -129,14 +132,14 @@ const BalanceTab: React.FC<BalanceTabProps> = ({ isAuthenticated }) => {
         </div>
 
         <div className="flex justify-center mb-8">
-          <div 
+          <div
             className="relative overflow-hidden rounded-2xl md:rounded-3xl p-6 md:p-8 max-w-md w-full group"
             style={{
-              background: 'rgba(255, 255, 255, 0.06)',
+              background: 'linear-gradient(160deg, rgba(160, 120, 255, 0.08) 0%, rgba(255, 255, 255, 0.05) 40%, rgba(80, 200, 180, 0.06) 100%)',
               backdropFilter: 'blur(20px)',
-              border: '2px solid rgba(220, 235, 245, 0.2)',
+              border: '2px solid rgba(160, 130, 255, 0.2)',
               boxShadow: `
-                0 0 20px rgba(180, 220, 240, 0.15),
+                0 0 20px rgba(160, 130, 255, 0.1),
                 inset 0 0 20px rgba(200, 230, 245, 0.03)
               `,
               opacity: balanceLoaded ? 1 : 0,
@@ -146,30 +149,30 @@ const BalanceTab: React.FC<BalanceTabProps> = ({ isAuthenticated }) => {
           >
             {/* Glowing orbs */}
             <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full blur-2xl opacity-10 animate-float" style={{
-              background: 'rgba(180, 220, 240, 0.8)'
+              background: 'rgba(160, 120, 255, 0.8)'
             }}></div>
             <div className="absolute -bottom-4 -left-4 w-24 h-24 rounded-full blur-xl opacity-10 animate-float-delayed" style={{
-              background: 'rgba(180, 220, 240, 0.6)'
+              background: 'rgba(80, 200, 180, 0.6)'
             }}></div>
-            
+
             {/* Shimmer effect on hover */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out"></div>
-            
+
             {/* Content */}
             <div className="relative z-10">
               {/* Header */}
               <div className="flex justify-between items-center mb-6">
                 <div>
-                  <p 
+                  <p
                     className="text-xs md:text-sm font-tech mb-1"
                     style={{
                       color: 'rgba(220, 235, 245, 0.7)',
-                      textShadow: '0 0 2px rgba(180, 220, 240, 0.2)'
+                      textShadow: '0 0 2px rgba(160, 130, 255, 0.15)'
                     }}
                   >
                     {t('balance.totalBalance')}
                   </p>
-                  <p 
+                  <p
                     className="text-[10px] md:text-xs font-tech"
                     style={{
                       color: 'rgba(220, 235, 245, 0.6)'
@@ -181,30 +184,30 @@ const BalanceTab: React.FC<BalanceTabProps> = ({ isAuthenticated }) => {
                 <div
                   className="profile-icon-wrapper"
                   style={{
-                    color: 'rgba(180, 220, 240, 0.9)',
-                    filter: 'drop-shadow(0 0 8px rgba(180, 220, 240, 0.6))'
+                    color: 'rgba(180, 160, 255, 0.9)',
+                    filter: 'drop-shadow(0 0 8px rgba(160, 130, 255, 0.5))'
                   }}
                 >
                   <Icon type="coins" size={28} />
                 </div>
               </div>
-              
+
               {/* Balance amount */}
               <div className="mb-6">
-                <div 
+                <div
                   className="text-4xl md:text-5xl font-tech font-bold mb-2"
                   style={{
                     color: '#e8f4f8',
-                    textShadow: '0 0 12px rgba(180, 220, 240, 0.4)'
+                    textShadow: '0 0 12px rgba(160, 130, 255, 0.3)'
                   }}
                 >
                   {balance.amount.amount}
                 </div>
-                <div 
+                <div
                   className="text-sm md:text-base font-tech font-semibold"
                   style={{
-                    color: 'rgba(180, 220, 240, 0.8)',
-                    textShadow: '0 0 6px rgba(180, 220, 240, 0.3)'
+                    color: 'rgba(180, 160, 255, 0.75)',
+                    textShadow: '0 0 6px rgba(160, 130, 255, 0.2)'
                   }}
                 >
                   {balance.amount.currencyCode}
@@ -301,64 +304,25 @@ export const BalanceSkeleton: React.FC = () => (
 
       {/* Balance skeleton */}
       <div className="flex justify-center mb-8">
-        <div 
+        <div
           className="relative overflow-hidden rounded-2xl md:rounded-3xl p-6 md:p-8 max-w-md w-full animate-pulse"
           style={{
             background: 'rgba(255, 255, 255, 0.06)',
             backdropFilter: 'blur(20px)',
-            border: '2px solid rgba(220, 235, 245, 0.2)',
-            boxShadow: '0 0 20px rgba(180, 220, 240, 0.15), inset 0 0 20px rgba(200, 230, 245, 0.03)'
+            border: '2px solid rgba(160, 130, 255, 0.2)',
+            boxShadow: '0 0 20px rgba(160, 130, 255, 0.1), inset 0 0 20px rgba(200, 230, 245, 0.03)'
           }}
         >
           <div className="flex justify-between items-center mb-6">
             <div className="space-y-2">
-              <div 
-                className="h-4 w-24 rounded"
-                style={{
-                  background: 'rgba(220, 235, 245, 0.1)'
-                }}
-              ></div>
-              <div 
-                className="h-3 w-16 rounded"
-                style={{
-                  background: 'rgba(220, 235, 245, 0.08)'
-                }}
-              ></div>
+              <div className="h-4 w-24 rounded" style={{ background: 'rgba(220, 235, 245, 0.1)' }}></div>
+              <div className="h-3 w-16 rounded" style={{ background: 'rgba(220, 235, 245, 0.08)' }}></div>
             </div>
-            <div 
-              className="w-7 h-7 rounded-lg"
-              style={{
-                background: 'rgba(220, 235, 245, 0.1)'
-              }}
-            ></div>
+            <div className="w-7 h-7 rounded-lg" style={{ background: 'rgba(220, 235, 245, 0.1)' }}></div>
           </div>
           <div className="mb-6">
-            <div 
-              className="h-12 w-32 rounded mb-2"
-              style={{
-                background: 'rgba(220, 235, 245, 0.1)'
-              }}
-            ></div>
-            <div 
-              className="h-5 w-20 rounded"
-              style={{
-                background: 'rgba(220, 235, 245, 0.08)'
-              }}
-            ></div>
-          </div>
-          <div className="flex gap-3">
-            <div
-              className="flex-1 h-12 rounded-xl"
-              style={{
-                background: 'rgba(220, 235, 245, 0.1)'
-              }}
-            ></div>
-            <div
-              className="flex-1 h-12 rounded-xl"
-              style={{
-                background: 'rgba(220, 235, 245, 0.1)'
-              }}
-            ></div>
+            <div className="h-12 w-32 rounded mb-2" style={{ background: 'rgba(220, 235, 245, 0.1)' }}></div>
+            <div className="h-5 w-20 rounded" style={{ background: 'rgba(220, 235, 245, 0.08)' }}></div>
           </div>
         </div>
       </div>

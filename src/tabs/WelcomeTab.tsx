@@ -90,18 +90,6 @@ const WelcomeTab: React.FC<WelcomeTabProps> = ({ canStartAnimation = true }) => 
         </button>
       </div>
 
-      <p
-        className={cn(
-          'absolute bottom-8 left-4 right-4 text-center font-tech text-[10px] md:text-xs tracking-wide transition-opacity duration-500',
-          contentVisible ? 'opacity-100' : 'opacity-0'
-        )}
-        style={{ color: 'rgba(220, 235, 245, 0.4)' }}
-      >
-        {t('welcome.feedback.text')}{' '}
-        <span className="font-mono font-semibold" style={{ color: 'rgba(180, 220, 240, 0.55)' }}>
-          {t('welcome.feedback.command')}
-        </span>
-      </p>
     </div>
   );
 };

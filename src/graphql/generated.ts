@@ -471,6 +471,8 @@ export type ResponsePagingFieldsFragment = { __typename?: 'ResponsePaging', tota
 
 export type LeaderboardUserFieldsFragment = { __typename?: 'LeaderboardUser', id: number, firstName: string, lastName?: string | null, photoUrl?: string | null, score: string, position: number };
 
+export type ResponseQueryOptionsFieldsFragment = { __typename?: 'ResponseQueryOptions', sorts: Array<string>, filters: Array<{ __typename?: 'LocalizedField', field: string, localization: string, items: Array<{ __typename?: 'LocalizedItem', name: string, localization: string }> }> };
+
 export type BalanceTransactionFieldsFragment = { __typename?: 'BalanceTransaction', id: string, type: BalanceTransactionType, cause: BalanceTransactionCause, createdAt: string, amount: (
     { __typename?: 'Money' }
     & MoneyFieldsFragment
@@ -546,6 +548,11 @@ export type GetAppDataQuery = { __typename?: 'Query', me: { __typename?: 'User',
         & DayStreakFieldsFragment
       ) } } };
 
+export type GetUserLocaleQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetUserLocaleQuery = { __typename?: 'Query', me: { __typename?: 'User', locale?: { __typename?: 'UserLocale', tag: string, isManual: boolean } | null } };
+
 export type RefreshActiveTasksQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -604,7 +611,10 @@ export type GetBalanceWithTransactionsQuery = { __typename?: 'Query', me: { __ty
           )>, paging: (
             { __typename?: 'ResponsePaging' }
             & ResponsePagingFieldsFragment
-          ) } } } } };
+          ), options?: (
+            { __typename?: 'ResponseQueryOptions' }
+            & ResponseQueryOptionsFieldsFragment
+          ) | null } } } } };
 
 export type GetLeaderboardInitialQueryVariables = Exact<{
   paging: PagingInput;
@@ -664,7 +674,10 @@ export type GetBalanceTransactionsQuery = { __typename?: 'Query', me: { __typena
           )>, paging: (
             { __typename?: 'ResponsePaging' }
             & ResponsePagingFieldsFragment
-          ) } } } } };
+          ), options?: (
+            { __typename?: 'ResponseQueryOptions' }
+            & ResponseQueryOptionsFieldsFragment
+          ) | null } } } } };
 
 export type GetClosedTasksQueryVariables = Exact<{
   paging: PagingInput;
@@ -678,7 +691,10 @@ export type GetClosedTasksQuery = { __typename?: 'Query', me: { __typename?: 'Us
         )>, paging: (
           { __typename?: 'ResponsePaging' }
           & ResponsePagingFieldsFragment
-        ) } } } };
+        ), options?: (
+          { __typename?: 'ResponseQueryOptions' }
+          & ResponseQueryOptionsFieldsFragment
+        ) | null } } } };
 
 export type GetUsersLeaderboardQueryVariables = Exact<{
   paging: PagingInput;
@@ -765,6 +781,19 @@ export const LeaderboardUserFieldsFragmentDoc = gql`
   photoUrl
   score
   position
+}
+    `;
+export const ResponseQueryOptionsFieldsFragmentDoc = gql`
+    fragment ResponseQueryOptionsFields on ResponseQueryOptions {
+  filters {
+    field
+    localization
+    items {
+      name
+      localization
+    }
+  }
+  sorts
 }
     `;
 export const MoneyFieldsFragmentDoc = gql`
@@ -907,6 +936,16 @@ export const GetAppDataDocument = gql`
   }
 }
     ${DayStreakFieldsFragmentDoc}`;
+export const GetUserLocaleDocument = gql`
+    query GetUserLocale {
+  me {
+    locale {
+      tag
+      isManual
+    }
+  }
+}
+    `;
 export const RefreshActiveTasksDocument = gql`
     query RefreshActiveTasks {
   me {
@@ -983,6 +1022,9 @@ export const GetBalanceWithTransactionsDocument = gql`
           paging {
             ...ResponsePagingFields
           }
+          options {
+            ...ResponseQueryOptionsFields
+          }
         }
       }
     }
@@ -990,7 +1032,8 @@ export const GetBalanceWithTransactionsDocument = gql`
 }
     ${MoneyFieldsFragmentDoc}
 ${BalanceTransactionFieldsFragmentDoc}
-${ResponsePagingFieldsFragmentDoc}`;
+${ResponsePagingFieldsFragmentDoc}
+${ResponseQueryOptionsFieldsFragmentDoc}`;
 export const GetLeaderboardInitialDocument = gql`
     query GetLeaderboardInitial($paging: PagingInput!, $filter: LeaderboardFilterInput!) {
   usersLeaderboard(paging: $paging, filter: $filter) {
@@ -1059,13 +1102,17 @@ export const GetBalanceTransactionsDocument = gql`
           paging {
             ...ResponsePagingFields
           }
+          options {
+            ...ResponseQueryOptionsFields
+          }
         }
       }
     }
   }
 }
     ${BalanceTransactionFieldsFragmentDoc}
-${ResponsePagingFieldsFragmentDoc}`;
+${ResponsePagingFieldsFragmentDoc}
+${ResponseQueryOptionsFieldsFragmentDoc}`;
 export const GetClosedTasksDocument = gql`
     query GetClosedTasks($paging: PagingInput!, $options: SearchOptionsInput) {
   me {
@@ -1077,12 +1124,16 @@ export const GetClosedTasksDocument = gql`
         paging {
           ...ResponsePagingFields
         }
+        options {
+          ...ResponseQueryOptionsFields
+        }
       }
     }
   }
 }
     ${PlayerTaskFieldsFragmentDoc}
-${ResponsePagingFieldsFragmentDoc}`;
+${ResponsePagingFieldsFragmentDoc}
+${ResponseQueryOptionsFieldsFragmentDoc}`;
 export const GetUsersLeaderboardDocument = gql`
     query GetUsersLeaderboard($paging: PagingInput!, $filter: LeaderboardFilterInput!) {
   usersLeaderboard(paging: $paging, filter: $filter) {
@@ -1124,6 +1175,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     GetAppData(variables?: GetAppDataQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetAppDataQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetAppDataQuery>({ document: GetAppDataDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetAppData', 'query', variables);
+    },
+    GetUserLocale(variables?: GetUserLocaleQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetUserLocaleQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetUserLocaleQuery>({ document: GetUserLocaleDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetUserLocale', 'query', variables);
     },
     RefreshActiveTasks(variables?: RefreshActiveTasksQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<RefreshActiveTasksQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<RefreshActiveTasksQuery>({ document: RefreshActiveTasksDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'RefreshActiveTasks', 'query', variables);

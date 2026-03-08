@@ -44,7 +44,7 @@ const BankingTransactionsList: React.FC<BankingTransactionsListProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(() => initialData ? initialData.paging.currentPage < initialData.paging.totalPageCount - 1 : true);
   const [totalCount, setTotalCount] = useState<number | null>(() => initialData?.paging.totalRowCount ?? null);
-  const [availableFilters] = useState<LocalizedField[]>([]);
+  const [availableFilters, setAvailableFilters] = useState<LocalizedField[]>([]);
   
   // Используем переданные фильтры или значения по умолчанию
   const dateFilters = useMemo(() => propDateFilters || { from: '', to: '' }, [propDateFilters]);
@@ -171,11 +171,16 @@ const BankingTransactionsList: React.FC<BankingTransactionsListProps> = ({
         },
       });
 
-      const { transactions: newTransactions, paging } = result.me.player.balance.transactions;
+      const { transactions: newTransactions, paging, options: responseOptions } = result.me.player.balance.transactions;
       const hasMoreData = paging != null && paging.currentPage < paging.totalPageCount - 1;
 
       if (paging?.totalRowCount !== undefined) {
         setTotalCount(paging.totalRowCount);
+      }
+
+      if (responseOptions?.filters) {
+        setAvailableFilters(responseOptions.filters);
+        onFiltersUpdate?.(responseOptions.filters);
       }
 
       if (reset) {
@@ -300,12 +305,6 @@ const BankingTransactionsList: React.FC<BankingTransactionsListProps> = ({
     return groupTransactionsByDate(transactions);
   }, [transactions, groupTransactionsByDate]);
 
-  // Обновление доступных фильтров
-  useEffect(() => {
-    if (availableFilters.length > 0) {
-      onFiltersUpdate?.(availableFilters);
-    }
-  }, [availableFilters]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Мемоизируем функцию получения иконки для транзакции
   const getTransactionIcon = useCallback((type: string, cause: string) => {

@@ -375,7 +375,7 @@ const StaminaIndicator: React.FC<StaminaIndicatorProps> = ({ stamina, onStaminaU
       {/* Tooltip with full regeneration info - appears on hover/click */}
       {showTooltip && displayStamina.fullRegenAt && formatFullRegenTime && (
         <div
-          className="stamina-tooltip absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-4 py-3.5 rounded-2xl z-50 pointer-events-none whitespace-nowrap"
+          className="stamina-tooltip absolute bottom-full left-0 right-0 mb-3 px-4 py-3.5 rounded-2xl z-50 pointer-events-none"
           style={{
             background: 'rgb(38, 44, 54)',
             border: '1px solid rgba(220, 235, 245, 0.35)',
@@ -384,7 +384,6 @@ const StaminaIndicator: React.FC<StaminaIndicatorProps> = ({ stamina, onStaminaU
               0 0 24px rgba(180, 220, 240, 0.08),
               inset 0 1px 0 rgba(255, 255, 255, 0.12)
             `,
-            minWidth: '280px',
             animation: 'staminaTooltipIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
             transformOrigin: 'bottom center',
           }}
@@ -395,7 +394,7 @@ const StaminaIndicator: React.FC<StaminaIndicatorProps> = ({ stamina, onStaminaU
                 <span className="text-xs font-tech whitespace-nowrap" style={{ color: 'rgba(220, 235, 245, 0.9)' }}>
                   {t('tasks.stamina.fullRegen')}:
                 </span>
-                <span className="text-sm font-tech font-bold whitespace-nowrap" style={{ color: '#e8f4f8', textShadow: '0 0 12px rgba(180, 220, 240, 0.3)' }}>
+                <span className="text-sm font-tech font-bold whitespace-nowrap" style={{ color: '#e8f4f8', textShadow: '0 0 12px rgba(180, 220, 240, 0.3)', fontVariantNumeric: 'tabular-nums' }}>
                   {formatFullRegenTime}
                 </span>
               </div>
@@ -417,11 +416,11 @@ const StaminaIndicator: React.FC<StaminaIndicatorProps> = ({ stamina, onStaminaU
         @keyframes staminaTooltipIn {
           0% {
             opacity: 0;
-            transform: translate(-50%, 8px) scale(0.97);
+            transform: translateY(8px) scale(0.97);
           }
           100% {
             opacity: 1;
-            transform: translate(-50%, 0) scale(1);
+            transform: translateY(0) scale(1);
           }
         }
         @keyframes shimmer {

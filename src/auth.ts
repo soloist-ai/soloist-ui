@@ -96,7 +96,9 @@ async function refreshTokenIfNeeded(): Promise<string | null> {
     if (is401Error) {
       // Refresh токен истек - уведомляем об истечении сессии
       clearTokens();
-      if (sessionExpiredCallback) {
+      // Не показываем "сессия истекла" если идёт процесс логина —
+      // login получит новые токены и всё заработает
+      if (sessionExpiredCallback && !globalAuthPromise) {
         try {
           sessionExpiredCallback();
         } catch (callbackError) {

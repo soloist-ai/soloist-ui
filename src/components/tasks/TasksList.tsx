@@ -111,13 +111,17 @@ const TasksList: React.FC<TasksListProps> = ({
         },
       });
 
-      const { tasks: newTasks, paging } = result.me.player.closedTasks;
+      const { tasks: newTasks, paging, options: responseOptions } = result.me.player.closedTasks;
       const hasMoreData = paging != null && paging.currentPage < paging.totalPageCount - 1;
 
       if (paging?.totalRowCount !== undefined) {
         setTotalCount(paging.totalRowCount);
       }
-      
+
+      if (responseOptions?.filters) {
+        onFiltersUpdate?.(responseOptions.filters);
+      }
+
       if (reset) {
         setTasks(newTasks as unknown as PlayerTask[]);
         setHasMore(hasMoreData);

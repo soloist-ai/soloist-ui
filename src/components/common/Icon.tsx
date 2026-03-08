@@ -23,7 +23,6 @@ import DumbbellIcon from '../../assets/icons/dumbbell.svg?react';
 import ZapIcon from '../../assets/icons/zap.svg?react';
 import SparklesIcon from '../../assets/icons/sparkles.svg?react';
 import GlobeIcon from '../../assets/icons/globe.svg?react';
-import RefreshIcon from '../../assets/icons/refresh.svg?react';
 import ArrowLeftRightIcon from '../../assets/icons/arrow-left-right.svg?react';
 import GiftIcon from '../../assets/icons/gift.svg?react';
 import BagIcon from '../../assets/icons/bag.svg?react';
@@ -62,7 +61,6 @@ export type IconType =
   | 'sparkles'
   | 'clock'
   | 'globe'
-  | 'refresh'
   | 'arrow-left-right'
   | 'gift'
   | 'bag'
@@ -140,8 +138,6 @@ const Icon: React.FC<IconProps> = ({ type, className = '', size = 24, active = t
       return <CalendarIcon {...iconProps} />;
     case 'globe':
       return <GlobeIcon {...iconProps} />;
-    case 'refresh':
-      return <RefreshIcon {...iconProps} />;
     case 'arrow-left-right':
       return <ArrowLeftRightIcon {...iconProps} />;
     case 'gift':

@@ -76,16 +76,15 @@ const BottomBar: React.FC<BottomBarProps> = ({ isAuthenticated, isVisible = true
           shape-rendering: geometricPrecision;
         }
       `}</style>
-      <div 
+      <div
         className={`fixed bottom-0 left-0 right-0 z-40 transition-all duration-300 ${isDialogOpen ? 'pointer-events-none' : ''}`}
         style={{
-          background: isDialogOpen 
+          background: isDialogOpen
             ? 'rgba(255, 255, 255, 0.08)'
             : 'rgba(255, 255, 255, 0.07)',
           backdropFilter: isDialogOpen ? 'blur(8px)' : 'blur(20px)',
           borderTop: '1px solid rgba(220, 235, 245, 0.15)',
           boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(220, 235, 245, 0.1)',
-          // Не затемняем календарь - он должен быть полностью видимым
           filter: isDialogOpen ? 'brightness(0.92)' : 'brightness(1)',
         }}
       >

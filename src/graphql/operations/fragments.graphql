@@ -89,6 +89,18 @@ fragment LeaderboardUserFields on LeaderboardUser {
   position
 }
 
+fragment ResponseQueryOptionsFields on ResponseQueryOptions {
+  filters {
+    field
+    localization
+    items {
+      name
+      localization
+    }
+  }
+  sorts
+}
+
 fragment BalanceTransactionFields on BalanceTransaction {
   id
   amount {

@@ -17,50 +17,50 @@
   overflow: hidden;
 }
 
-/* Движущиеся орбы засвета на всех табах: полноценное перемещение по экрану */
+/* Движущиеся орбы засвета: мягкое фоновое свечение под glass-элементами */
 .app-background-glow {
   position: absolute;
   border-radius: 50%;
-  filter: blur(60px);
-  -webkit-filter: blur(60px);
-  opacity: 0.24;
+  filter: blur(90px);
+  -webkit-filter: blur(90px);
+  opacity: 0.14;
 }
 @media (min-width: 768px) {
   .app-background-glow {
-    filter: blur(80px);
-    -webkit-filter: blur(80px);
+    filter: blur(110px);
+    -webkit-filter: blur(110px);
   }
 }
 /* Размер орбов зависит от экрана: на мобилках компактнее, на десктопе крупнее */
 .app-background-glow-1 {
-  width: min(28rem, 40vmin);
-  height: min(28rem, 40vmin);
-  background: rgba(180, 216, 232, 0.9);
+  width: min(32rem, 50vmin);
+  height: min(32rem, 50vmin);
+  background: rgba(180, 216, 232, 0.7);
   top: 15%;
   left: 10%;
-  animation: background-glow-drift-1 48s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation: background-glow-drift-1 60s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 .app-background-glow-2 {
-  width: min(36rem, 55vmin);
-  height: min(36rem, 55vmin);
-  background: rgba(200, 230, 245, 0.8);
+  width: min(38rem, 60vmin);
+  height: min(38rem, 60vmin);
+  background: rgba(200, 230, 245, 0.6);
   bottom: 15%;
   right: 10%;
-  animation: background-glow-drift-2 50s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation: background-glow-drift-2 64s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* Траектории: орбы движутся по периметру в противоположных углах (орб1 по часовой, орб2 против) */
+/* Траектории: орбы движутся плавно, с малой амплитудой — без резких перепадов яркости */
 @keyframes background-glow-drift-1 {
-  0%, 100% { transform: translate(0, 0); }           /* лево-верх */
-  25% { transform: translate(35vw, 0); }             /* право-верх */
-  50% { transform: translate(35vw, 38vh); }          /* право-низ */
-  75% { transform: translate(0, 38vh); }             /* лево-низ */
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(18vw, 8vh); }
+  50% { transform: translate(22vw, 22vh); }
+  75% { transform: translate(5vw, 18vh); }
 }
 @keyframes background-glow-drift-2 {
-  0%, 100% { transform: translate(0, 0); }           /* право-низ */
-  25% { transform: translate(-35vw, 0); }            /* лево-низ */
-  50% { transform: translate(-35vw, -38vh); }        /* лево-верх */
-  75% { transform: translate(0, -38vh); }            /* право-верх */
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(-18vw, -8vh); }
+  50% { transform: translate(-22vw, -22vh); }
+  75% { transform: translate(-5vw, -18vh); }
 }
 
 /* Фон контента прозрачный, чтобы был виден слой .app-background-layer */
