@@ -2,32 +2,31 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
-import reportWebVitals from './reportWebVitals';
 import { SettingsProvider } from './hooks/useSettings';
 import './i18n';
-
-// Инициализируем конфигурацию OpenAPI с функцией getTokenForRequest
 import './api/config';
 
-// Инициализируем моки Telegram до рендеринга приложения, если они нужны
-import { useMocks } from './config/environment';
-if (useMocks && typeof window !== 'undefined') {
-  const { setupMockTelegram } = require('./mocks/mockTelegram');
-  setupMockTelegram();
+async function bootstrap() {
+  if (typeof window !== 'undefined') {
+    // The Telegram SDK (telegram-web-app.js) always creates window.Telegram.WebApp,
+    // even in a plain browser — but initData is only populated inside a real Telegram session.
+    // VITE_USE_MOCKS=true explicitly forces mock mode (e.g. testing while inside Telegram).
+    const forceMocks = import.meta.env.VITE_USE_MOCKS === 'true';
+    const hasTelegramAuth = !!(window as any).Telegram?.WebApp?.initData;
+    if (forceMocks || !hasTelegramAuth) {
+      const { setupMockTelegram } = await import('./mocks/mockTelegram');
+      setupMockTelegram();
+    }
+  }
+
+  ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
+    <React.StrictMode>
+      <SettingsProvider>
+        <App />
+      </SettingsProvider>
+    </React.StrictMode>
+  );
+
 }
 
-const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
-);
-root.render(
-  <React.StrictMode>
-    <SettingsProvider>
-      <App />
-    </SettingsProvider>
-  </React.StrictMode>
-);
-
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
+bootstrap();

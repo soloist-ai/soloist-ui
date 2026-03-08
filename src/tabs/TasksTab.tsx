@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useCallback, useRef, startTransition } from 'react';
-import type { PlayerTask, Stamina } from '../api';
-import { api } from '../services';
+import type { PlayerTask, Stamina } from '../graphql/generated';
+import { gqlSdk } from '../graphql/client';
 import { useLocalization } from '../hooks/useLocalization';
 import { useTasksRefresh } from '../hooks/useTasksRefresh';
-import TasksSection from '../components/TasksSection';
-import TopicsSection from '../components/TopicsSection';
-import TaskCardSkeleton from '../components/TaskCardSkeleton';
-import Icon from '../components/Icon';
-import StaminaIndicator from '../components/StaminaIndicator';
-import StaminaIndicatorSkeleton from '../components/StaminaIndicatorSkeleton';
+import TasksSection from '../components/tasks/TasksSection';
+import TopicsSection from '../components/tasks/TopicsSection';
+import TaskCardSkeleton from '../components/tasks/TaskCardSkeleton';
+import Icon from '../components/common/Icon';
+import StaminaIndicator from '../components/tasks/StaminaIndicator';
+import StaminaIndicatorSkeleton from '../components/tasks/StaminaIndicatorSkeleton';
 
 type TasksTabProps = {
   isAuthenticated: boolean;
@@ -37,6 +37,17 @@ const TasksTab: React.FC<TasksTabProps> = ({ isAuthenticated }) => {
   const contentContainerRef = useRef<HTMLDivElement | null>(null);
   const { t } = useLocalization();
 
+  // Fetch tasks + stamina, update local state
+  const fetchAndUpdateTasks = useCallback(async () => {
+    const { me: res } = await gqlSdk.RefreshActiveTasks();
+    const { activeTasks, stamina: s } = res.player;
+    setTasks(activeTasks.tasks);
+    setStamina(s);
+    setFirstTime(activeTasks.isFirstTime);
+    setLoading(false);
+    return { tasks: activeTasks.tasks, stamina: s, isFirstTime: activeTasks.isFirstTime };
+  }, []);
+
   // Функция для обновления списка задач и стамины
   const handleTasksUpdate = useCallback((newTasks: PlayerTask[], newStamina?: Stamina, newFirstTime?: boolean) => {
     setTasks(newTasks);
@@ -59,57 +70,47 @@ const TasksTab: React.FC<TasksTabProps> = ({ isAuthenticated }) => {
     onTasksUpdate: handleTasksUpdate,
   });
 
-  // Загружаем задачи только при монтировании компонента и если авторизованы
-  // Используем useRef, чтобы гарантировать, что запрос выполнится только один раз
+  // Initial load — fetch tasks on tab mount
   useEffect(() => {
     if (isAuthenticated && !hasLoadedRef.current) {
       hasLoadedRef.current = true;
-      setContentLoaded(false);
-      setLoading(true);
-      // Делаем запрос только один раз при монтировании
-      api.getPlayerTasks()
-        .then((res) => {
-          handleTasksUpdate(res.tasks, res.stamina, res.isFirstTime);
-          // Если isFirstTime, перенаправляем в топики
-          if (res.isFirstTime) {
+      fetchAndUpdateTasks()
+        .then(({ isFirstTime }) => {
+          if (isFirstTime) {
             setTabMode('topics');
             setDisplayTabMode('topics');
           }
-          // Запускаем анимацию появления контента
-          setTimeout(() => {
-            setContentLoaded(true);
-          }, 50);
+          setTimeout(() => setContentLoaded(true), 50);
         })
-        .catch((error) => {
-          console.error('Error getting tasks:', error);
+        .catch((err) => {
+          console.error('[TasksTab] initial load failed:', err);
           setLoading(false);
-          setTimeout(() => {
-            setContentLoaded(true);
-          }, 50);
+          setTimeout(() => setContentLoaded(true), 50);
         });
     } else if (!isAuthenticated) {
-      // Если не авторизованы, не показываем loading
       setLoading(false);
       setContentLoaded(true);
-      hasLoadedRef.current = false; // Сбрасываем флаг при разлогине
+      hasLoadedRef.current = false;
     }
-  }, [isAuthenticated, handleTasksUpdate]);
+  }, [isAuthenticated, fetchAndUpdateTasks]);
 
   // Синхронизация стамины с бэкендом каждую минуту, пока открыт таб (без перезагрузки списка задач)
   useEffect(() => {
     if (!isAuthenticated) return;
 
+    if (taskViewMode !== 'active') return;
+
     const syncStamina = () => {
-      api.getPlayerTasks()
-        .then((res) => {
-          if (res.stamina) setStamina(res.stamina);
+      gqlSdk.GetPlayerStamina()
+        .then(({ me: res }) => {
+          if (res.player.stamina) setStamina(res.player.stamina);
         })
         .catch(() => { /* тихо игнорируем ошибки синка */ });
     };
 
     const intervalId = setInterval(syncStamina, 60_000);
     return () => clearInterval(intervalId);
-  }, [isAuthenticated]);
+  }, [isAuthenticated, taskViewMode]);
 
   // Обработчик переключения на топики
   const handleGoToTopics = useCallback(() => {
@@ -146,16 +147,11 @@ const TasksTab: React.FC<TasksTabProps> = ({ isAuthenticated }) => {
       setTabMode('tasks');
       setTaskViewMode('active');
       setDisplayTaskViewMode('active');
-      // Перезагружаем задачи после сохранения топиков
+      // Reload tasks after topics save
       if (isAuthenticated) {
-        api.getPlayerTasks()
-          .then((res) => {
-            setTasks(res.tasks);
-            setStamina(res.stamina);
-            setFirstTime(res.isFirstTime);
-          })
+        fetchAndUpdateTasks()
           .catch((error) => {
-            console.error('Error getting tasks after topics save:', error);
+            console.error('Error refreshing tasks after topics save:', error);
           })
           .finally(() => {
             setDisplayTabMode('tasks');
@@ -166,7 +162,7 @@ const TasksTab: React.FC<TasksTabProps> = ({ isAuthenticated }) => {
         setTimeout(() => setIsTabTransitioning(false), 50);
       }
     }, 220);
-  }, [isAuthenticated]);
+  }, [isAuthenticated, fetchAndUpdateTasks]);
 
   // Полностраничный skeleton только при первом открытии таба (loading = true только в начальном useEffect)
   if (loading && tabMode === 'tasks') {
@@ -460,10 +456,7 @@ const TasksTab: React.FC<TasksTabProps> = ({ isAuthenticated }) => {
                           }
                           setIsTransitioning(true);
                           setActiveViewLoading(true);
-                          api.getPlayerTasks()
-                            .then((res) => {
-                              handleTasksUpdate(res.tasks, res.stamina, res.isFirstTime);
-                            })
+                          fetchAndUpdateTasks()
                             .catch((err) => {
                               console.error('Error fetching active tasks:', err);
                               setTasks([]);
@@ -623,6 +616,7 @@ const TasksTab: React.FC<TasksTabProps> = ({ isAuthenticated }) => {
             {displayTabMode === 'topics' ? (
               <TopicsSection
                 isAuthenticated={isAuthenticated}
+                isFirstTime={firstTime}
                 onSave={handleTopicsSave}
               />
             ) : (
@@ -645,7 +639,6 @@ const TasksTab: React.FC<TasksTabProps> = ({ isAuthenticated }) => {
                   loading={loading}
                   activeViewLoading={activeViewLoading}
                   firstTime={firstTime}
-                  onTasksUpdate={handleTasksUpdate}
                   onGoToTopics={handleGoToTopics}
                   initialViewMode={displayTaskViewMode}
                   isTransitioning={isTransitioning}

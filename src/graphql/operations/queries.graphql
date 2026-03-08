@@ -1,0 +1,218 @@
+# ── Bootstrap ────────────────────────────────────────────────────────────────
+query GetAppData {
+  me {
+    id
+    photoUrl
+    locale {
+      tag
+      isManual
+    }
+    roles
+    player {
+      dayStreak {
+        ...DayStreakFields
+      }
+    }
+  }
+}
+
+# ── Locale-only refresh (used by WS locale notification) ─────────────────────
+
+query GetUserLocale {
+  me {
+    locale {
+      tag
+      isManual
+    }
+  }
+}
+
+# ── Targeted refreshes after WS notifications ────────────────────────────────
+
+query RefreshActiveTasks {
+  me {
+    player {
+      activeTasks {
+        isFirstTime
+        tasks {
+          ...PlayerTaskFields
+        }
+      }
+      stamina {
+        ...StaminaFields
+      }
+    }
+  }
+}
+
+query GetPlayerStamina {
+  me {
+    player {
+      stamina {
+        ...StaminaFields
+      }
+    }
+  }
+}
+
+query RefreshDayStreak {
+  me {
+    player {
+      dayStreak {
+        ...DayStreakFields
+      }
+    }
+  }
+}
+
+# ── Per-tab on-demand queries ─────────────────────────────────────────────────
+
+# ProfileTab — fresh fetch on open
+query GetUserProfile {
+  me {
+    ...UserProfileFields
+  }
+}
+
+# TopicsSection — own fetch on mount
+query GetPlayerTopics {
+  me {
+    player {
+      taskTopics {
+        topics {
+          ...PlayerTaskTopicFields
+        }
+      }
+    }
+  }
+}
+
+# BalanceTab — first request: balance amount + first page of transactions together
+query GetBalanceWithTransactions($paging: PagingInput!, $options: SearchOptionsInput) {
+  me {
+    player {
+      balance {
+        id
+        amount {
+          ...MoneyFields
+        }
+        transactions(paging: $paging, options: $options) {
+          transactions {
+            ...BalanceTransactionFields
+          }
+          paging {
+            ...ResponsePagingFields
+          }
+          options {
+            ...ResponseQueryOptionsFields
+          }
+        }
+      }
+    }
+  }
+}
+
+# LeaderboardView — first request: users list + current user position together
+query GetLeaderboardInitial($paging: PagingInput!, $filter: LeaderboardFilterInput!) {
+  usersLeaderboard(paging: $paging, filter: $filter) {
+    users {
+      ...LeaderboardUserFields
+    }
+    paging {
+      ...ResponsePagingFields
+    }
+  }
+  userLeaderboard(filter: $filter) {
+    ...LeaderboardUserFields
+  }
+}
+
+# ── Other user profile ────────────────────────────────────────────────────────
+
+query GetUserById($id: Long!) {
+  user(id: $id) {
+    ...UserProfileFields
+    player {
+      balance {
+        id
+        amount {
+          ...MoneyFields
+        }
+      }
+    }
+  }
+}
+
+query GetMonthlyActivity($year: Int!, $month: Int!) {
+  me {
+    player {
+      monthlyActivity(year: $year, month: $month) {
+        activeDays
+      }
+    }
+  }
+}
+
+query GetDailyTasks {
+  me {
+    player {
+      dailyTasks {
+        tasks {
+          ...PlayerDailyTaskFields
+        }
+      }
+    }
+  }
+}
+
+# ── Paginated queries — only list fields, no extra data ──────────────────────
+
+query GetBalanceTransactions($paging: PagingInput!, $options: SearchOptionsInput) {
+  me {
+    player {
+      balance {
+        transactions(paging: $paging, options: $options) {
+          transactions {
+            ...BalanceTransactionFields
+          }
+          paging {
+            ...ResponsePagingFields
+          }
+          options {
+            ...ResponseQueryOptionsFields
+          }
+        }
+      }
+    }
+  }
+}
+
+query GetClosedTasks($paging: PagingInput!, $options: SearchOptionsInput) {
+  me {
+    player {
+      closedTasks(paging: $paging, options: $options) {
+        tasks {
+          ...PlayerTaskFields
+        }
+        paging {
+          ...ResponsePagingFields
+        }
+        options {
+          ...ResponseQueryOptionsFields
+        }
+      }
+    }
+  }
+}
+
+# Pagination-only — used for subsequent pages in LeaderboardView
+query GetUsersLeaderboard($paging: PagingInput!, $filter: LeaderboardFilterInput!) {
+  usersLeaderboard(paging: $paging, filter: $filter) {
+    users {
+      ...LeaderboardUserFields
+    }
+    paging {
+      ...ResponsePagingFields
+    }
+  }
+}

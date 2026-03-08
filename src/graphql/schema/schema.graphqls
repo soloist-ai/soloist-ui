@@ -1,0 +1,83 @@
+scalar Long
+scalar BigDecimal
+scalar DateTime
+scalar UUID
+scalar Date
+
+type Query
+
+type Mutation
+
+# ── Common types ─────────────────────────────────────────
+
+type ResponsePaging {
+    totalRowCount: Long!
+    totalPageCount: Long!
+    currentPage: Int!
+    currentPageSize: Int!
+}
+
+type ResponseQueryOptions {
+    filters: [LocalizedField!]!
+    sorts: [String!]!
+}
+
+type LocalizedField {
+    field: String!
+    localization: String!
+    items: [LocalizedItem!]!
+}
+
+type LocalizedItem {
+    name: String!
+    localization: String!
+}
+
+type Money {
+    currencyCode: String!
+    amount: BigDecimal!
+}
+
+# ── Common inputs ─────────────────────────────────────────
+
+input PagingInput {
+    page: Int = 0
+    pageSize: Int = 20
+}
+
+input SearchOptionsInput {
+    filter: FilterInput
+    sorts: [SortInput!]
+}
+
+input FilterInput {
+    dateFilters: [DateFilterInput!]
+    enumFilters: [EnumFilterInput!]
+}
+
+input DateFilterInput {
+    field: String!
+    range: DayRangeInput!
+}
+
+input EnumFilterInput {
+    field: String!
+    values: [String!]!
+}
+
+input SortInput {
+    field: String!
+    mode: OrderMode!
+}
+
+input DayRangeInput {
+    from: Date!
+    to: Date!
+}
+
+# ── Common enums ──────────────────────────────────────────
+
+enum OrderMode {
+    ASC
+    DESC
+}

@@ -160,10 +160,15 @@ export const getHeaders = async (config: OpenAPIConfig, options: ApiRequestOptio
   // Получаем временную зону браузера
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
+  // Версионирование API для auth-запросов (Spring Boot style)
+  const isAuthRequest = options.url?.includes('/auth/login') || options.url?.includes('/auth/refresh');
+  const versionHeaders = isAuthRequest ? { 'API-Version': '1' } : {};
+
   const headers = Object.entries({
     Accept: 'application/json',
     'Accept-Language': getLanguageFromStorage(),
     'X-TimeZone': timeZone,
+    ...versionHeaders,
     ...additionalHeaders,
     ...options.headers,
     ...formHeaders,
@@ -265,10 +270,10 @@ const handleMockRequest = async <T>(options: ApiRequestOptions): Promise<T | nul
     const { mockAuthService, mockUserService, mockPlayerService } = await import('../../mocks/mockApi');
     
     // Обработка auth запросов
-    if (options.url === '/api/v1/auth/login' && options.method === 'POST') {
+    if (options.url === '/api/auth/login' && options.method === 'POST') {
       return await mockAuthService.login(options.body as any) as any;
     }
-    if (options.url === '/api/v1/auth/refresh' && options.method === 'POST') {
+    if (options.url === '/api/auth/refresh' && options.method === 'POST') {
       return await mockAuthService.refresh(options.body as any) as any;
     }
     
@@ -442,8 +447,8 @@ export const request = <T>(config: OpenAPIConfig, options: ApiRequestOptions, ax
 
         // Retry логика для 500 ошибок
         while (response.status === 500 && retryCount < maxRetries && 
-               options.url !== '/api/v1/auth/login' && 
-               options.url !== '/api/v1/auth/refresh') {
+               options.url !== '/api/auth/login' &&
+               options.url !== '/api/auth/refresh') {
           retryCount++;
           console.warn(`[Request] Received 500 error, retrying (attempt ${retryCount}/${maxRetries})...`, {
             url: options.url,
@@ -475,8 +480,8 @@ export const request = <T>(config: OpenAPIConfig, options: ApiRequestOptions, ax
 
         // Если получили 401 и это не auth-запрос, пробуем обновить токен и повторить
         if (response.status === 401 &&
-            options.url !== '/api/v1/auth/login' &&
-            options.url !== '/api/v1/auth/refresh') {
+            options.url !== '/api/auth/login' &&
+            options.url !== '/api/auth/refresh') {
           try {
             const newToken = await auth.handle401Error();
             if (newToken) {

@@ -1,0 +1,68 @@
+extend type Mutation {
+    generateTasks: Boolean!
+    completeTask(id: UUID!): CompleteTaskResult!
+    skipTask(id: UUID!): Boolean!
+}
+
+# ── Domain types ─────────────────────────────────────────
+
+type Task {
+    id: UUID!
+    title: String!
+    description: String
+    experience: Int!
+    currencyReward: Int!
+    rarity: Rarity!
+    topics: [TaskTopic!]!
+    agility: Int!
+    strength: Int!
+    intelligence: Int!
+}
+
+type PlayerTask {
+    id: UUID!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+    order: Int!
+    status: PlayerTaskStatus!
+    task: Task!
+}
+
+type PlayerDailyTask {
+    id: UUID!
+    title: String!
+    progress: BigDecimal!
+    goal: BigDecimal!
+    isCompleted: Boolean!
+}
+
+# ── Result types ─────────────────────────────────────────
+
+type ActiveTasksResult {
+    tasks: [PlayerTask!]!
+    isFirstTime: Boolean!
+}
+
+type DailyTasksResult {
+    tasks: [PlayerDailyTask!]!
+}
+
+type CompleteTaskResult {
+    playerBefore: CompleteTaskPlayer!
+    playerAfter: CompleteTaskPlayer!
+}
+
+type ClosedPlayerTasksResult {
+    tasks: [PlayerTask!]!
+    paging: ResponsePaging!
+    options: ResponseQueryOptions
+}
+
+# ── Enums ────────────────────────────────────────────────
+
+enum PlayerTaskStatus {
+    PREPARING
+    IN_PROGRESS
+    COMPLETED
+    SKIPPED
+}

@@ -1,37 +1,35 @@
 import { useState, useEffect } from 'react';
-import { UserService } from '../api';
-import type { UserAdditionalInfoResponse } from '../api';
 import { useSettings } from './useSettings';
-import { applyLocaleFromAdditionalInfoResponse } from '../utils/localeUtils';
+import { applyLocale } from '../utils/localeUtils';
+import { gqlSdk } from '../graphql/client';
+import type { AppMe } from '../contexts/AppDataContext';
 
 export const useLocaleSync = (isAuthenticated: boolean) => {
   const [localeFetched, setLocaleFetched] = useState(false);
   const [isLocaleLoading, setIsLocaleLoading] = useState(false);
-  const [additionalInfoData, setAdditionalInfoData] = useState<UserAdditionalInfoResponse | null>(null);
+  const [appData, setAppData] = useState<AppMe | null>(null);
   const { updateSettings, setLocaleLoaded, localeLoaded } = useSettings();
 
-  // Один запрос getAdditionalInfo после авторизации: по нему обновляем локаль и отдаём данные в UserAdditionalInfoProvider
   useEffect(() => {
     if (!isAuthenticated || localeFetched) {
       setIsLocaleLoading(false);
       return;
     }
 
+    let isCancelled = false;
     const timeoutId = setTimeout(() => {
-      let isCancelled = false;
       setIsLocaleLoading(true);
 
       (async () => {
         try {
+          console.log('[Locale] Fetching app bootstrap data...');
+          const { me } = await gqlSdk.GetAppData();
           if (isCancelled) return;
-          console.log('[Locale] Fetching user additional info (locale + profile)...');
-          const response = await UserService.getUserAdditionalInfo();
-          if (isCancelled) return;
-          applyLocaleFromAdditionalInfoResponse(response, updateSettings, setLocaleLoaded);
-          setAdditionalInfoData(response);
+          applyLocale(me.locale, updateSettings, setLocaleLoaded);
+          setAppData(me);
           setLocaleFetched(true);
         } catch (e) {
-          console.error('Failed to fetch user additional info:', e);
+          console.error('[Locale] Failed to fetch bootstrap data:', e);
           if (isCancelled) return;
           setLocaleLoaded(true);
           setLocaleFetched(true);
@@ -39,11 +37,10 @@ export const useLocaleSync = (isAuthenticated: boolean) => {
           if (!isCancelled) setIsLocaleLoading(false);
         }
       })();
-
-      return () => { isCancelled = true; };
     }, 100);
 
     return () => {
+      isCancelled = true;
       clearTimeout(timeoutId);
       setIsLocaleLoading(false);
     };
@@ -52,15 +49,10 @@ export const useLocaleSync = (isAuthenticated: boolean) => {
   useEffect(() => {
     if (!isAuthenticated) {
       setLocaleFetched(false);
-      setAdditionalInfoData(null);
+      setAppData(null);
       setIsLocaleLoading(false);
     }
   }, [isAuthenticated]);
 
-  return {
-    localeFetched,
-    isLocaleLoading,
-    localeLoaded,
-    additionalInfoData,
-  };
+  return { localeFetched, isLocaleLoading, localeLoaded, appData };
 };

@@ -1,5 +1,5 @@
 # Build stage
-FROM node:18-alpine AS build
+FROM oven/bun:1-alpine AS build
 WORKDIR /app
 
 # Commit SHA for version.json (passed from CI via --build-arg)
@@ -10,8 +10,8 @@ ENV GIT_COMMIT_SHA=$GIT_COMMIT_SHA
 ARG REACT_APP_MAINTENANCE_MODE=false
 ENV REACT_APP_MAINTENANCE_MODE=$REACT_APP_MAINTENANCE_MODE
 
-COPY package*.json ./
-RUN npm ci --legacy-peer-deps
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
 COPY . .
 # Используем production сборку для CI/CD
 # Устанавливаем переменные окружения для production режима
@@ -19,7 +19,7 @@ ENV NODE_ENV=production
 ENV REACT_APP_ENV=production
 ENV REACT_APP_USE_MOCKS=false
 # Собираем приложение в production режиме
-RUN npm run build:prod
+RUN bun run build
 
 # Production stage
 FROM nginx:alpine

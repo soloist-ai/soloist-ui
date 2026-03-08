@@ -1,0 +1,71 @@
+extend type Query {
+    me: User!
+    user(id: Long!): User!
+    usersLeaderboard(paging: PagingInput!, filter: LeaderboardFilterInput!): UsersLeaderboardResult!
+    userLeaderboard(filter: LeaderboardFilterInput!): LeaderboardUser!
+}
+
+extend type Mutation {
+    updateUserLocale(locale: UserLocaleInput!): Boolean!
+}
+
+# ── Domain types ─────────────────────────────────────────
+
+type User {
+    id: Long!
+    username: String
+    firstName: String!
+    lastName: String
+    photoUrl: String
+    locale: UserLocale
+    roles: [UserRole!]!
+    player: Player!
+}
+
+type UserLocale {
+    tag: String!
+    isManual: Boolean!
+}
+
+type LeaderboardUser {
+    id: Long!
+    firstName: String!
+    lastName: String
+    photoUrl: String
+    score: String!
+    position: Long!
+}
+
+# ── Input types ──────────────────────────────────────────
+
+input LeaderboardFilterInput {
+    type: LeaderboardType!
+    range: DayRangeInput
+}
+
+input UserLocaleInput {
+    tag: String!
+    isManual: Boolean!
+}
+
+# ── Result types ─────────────────────────────────────────
+
+type UsersLeaderboardResult {
+    users: [LeaderboardUser!]!
+    paging: ResponsePaging!
+}
+
+# ── Enums ────────────────────────────────────────────────
+
+enum UserRole {
+    USER
+    ADMIN
+    DEVELOPER
+    MANAGER
+}
+
+enum LeaderboardType {
+    TASKS
+    BALANCE
+    LEVEL
+}

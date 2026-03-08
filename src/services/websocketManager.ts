@@ -259,7 +259,8 @@ class WebSocketManager {
               });
 
               // Обрабатываем специальные типы уведомлений
-              if (notification.source === 'locale') {
+              const src = String(notification.source ?? '').toLowerCase().replace(/_/g, '');
+              if (src === 'locale') {
                 this.localeUpdateHandlers.forEach(handler => {
                   handler().catch(e => {
                     console.error('[WS Manager] Error in locale update handler:', e);

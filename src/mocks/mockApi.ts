@@ -41,25 +41,7 @@ import type { Stamina } from '../api';
 // Имитация задержки сети
 const delay = (ms: number = 300) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Функция для получения стоимости задачи по редкости
-export const getTaskStaminaCost = (rarity?: TaskRarity): number => {
-  switch (rarity) {
-    case TaskRarity.COMMON:
-      return 10;
-    case TaskRarity.UNCOMMON:
-      return 20;
-    case TaskRarity.RARE:
-      return 30;
-    case TaskRarity.EPIC:
-      return 40;
-    case TaskRarity.LEGENDARY:
-      return 50;
-    default:
-      return 10; // По умолчанию COMMON
-  }
-};
-
-export const SKIP_STAMINA_COST = 5; // Стоимость скипа любой задачи
+export { getTaskStaminaCost, SKIP_STAMINA_COST } from '../utils/taskUtils';
 
 // Хранилище состояния для моков (симулирует состояние на сервере)
 class MockState {
@@ -830,8 +812,6 @@ export const mockPlayerService = {
       const startIndex = currentPage * pageSize;
       const endIndex = startIndex + pageSize;
       const paginatedTransactions = filteredTransactions.slice(startIndex, endIndex);
-      const hasMore = endIndex < filteredTransactions.length;
-      
       // Моковые доступные фильтры
       const mockFilters: LocalizedField[] = [
         {
@@ -860,7 +840,7 @@ export const mockPlayerService = {
           totalRowCount: filteredTransactions.length,
           totalPageCount: Math.ceil(filteredTransactions.length / pageSize),
           currentPage: currentPage,
-          hasMore: hasMore,
+          currentPageSize: paginatedTransactions.length,
         },
         options: {
           filters: mockFilters,
@@ -979,9 +959,6 @@ export const mockPlayerService = {
       const startIndex = currentPage * pageSize;
       const endIndex = startIndex + pageSize;
       const paginatedTasks = filteredTasks.slice(startIndex, endIndex);
-      const hasMore = endIndex < filteredTasks.length;
-      
-      
       // Моковые доступные фильтры (можно расширить)
       const mockFilters: LocalizedField[] = [
         {
@@ -1021,7 +998,7 @@ export const mockPlayerService = {
           totalRowCount: filteredTasks.length,
           totalPageCount: Math.ceil(filteredTasks.length / pageSize),
           currentPage: currentPage,
-          hasMore: hasMore,
+          currentPageSize: paginatedTasks.length,
         },
         options: {
           filters: mockFilters,

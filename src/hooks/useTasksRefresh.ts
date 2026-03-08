@@ -1,11 +1,12 @@
 import { useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
-import { api } from '../services';
-import type { PlayerTask, Stamina } from '../api';
+import { gqlSdk } from '../graphql/client';
+import type { PlayerTask, Stamina } from '../graphql/generated';
+import { NotificationSource } from '../api';
 
 interface UseTasksRefreshProps {
   isAuthenticated: boolean;
-  onTasksUpdate: (tasks: PlayerTask[], stamina?: Stamina) => void;
+  onTasksUpdate: (tasks: PlayerTask[], stamina?: Stamina, isFirstTime?: boolean) => void;
 }
 
 export const useTasksRefresh = ({ isAuthenticated, onTasksUpdate }: UseTasksRefreshProps) => {
@@ -14,33 +15,36 @@ export const useTasksRefresh = ({ isAuthenticated, onTasksUpdate }: UseTasksRefr
 
   const refreshTasks = useCallback(async () => {
     if (!isAuthenticated || !isTasksTabActive) return;
-    
     try {
-      const response = await api.getPlayerTasks();
-      onTasksUpdate(response.tasks, response.stamina);
+      const { me } = await gqlSdk.RefreshActiveTasks();
+      const { activeTasks, stamina } = me.player;
+      onTasksUpdate(activeTasks.tasks, stamina, activeTasks.isFirstTime);
+
+      // Race condition guard: WS notification may arrive before tasks are
+      // persisted. If server still says isFirstTime=true, retry once after delay.
+      if (activeTasks.isFirstTime) {
+        setTimeout(async () => {
+          try {
+            const { me: me2 } = await gqlSdk.RefreshActiveTasks();
+            const { activeTasks: at2, stamina: s2 } = me2.player;
+            onTasksUpdate(at2.tasks, s2, at2.isFirstTime);
+          } catch { /* silent */ }
+        }, 3000);
+      }
     } catch (error) {
       console.error('Error refreshing tasks:', error);
     }
   }, [isAuthenticated, isTasksTabActive, onTasksUpdate]);
 
-
-  // Слушаем уведомления через глобальное событие
   useEffect(() => {
     if (!isAuthenticated || !isTasksTabActive) return;
 
     const handleTasksNotification = (event: CustomEvent) => {
-      const { source } = event.detail;
-      if (source === 'tasks') {
-        refreshTasks();
-      }
+if (event.detail?.source === NotificationSource.TASKS) refreshTasks();
     };
 
-    // Добавляем слушатель для кастомного события
     window.addEventListener('tasks-notification', handleTasksNotification as EventListener);
-
-    return () => {
-      window.removeEventListener('tasks-notification', handleTasksNotification as EventListener);
-    };
+    return () => window.removeEventListener('tasks-notification', handleTasksNotification as EventListener);
   }, [isAuthenticated, isTasksTabActive, refreshTasks]);
 
   return { refreshTasks };

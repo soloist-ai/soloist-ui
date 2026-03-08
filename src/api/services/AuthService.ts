@@ -22,7 +22,7 @@ export class AuthService {
     ): CancelablePromise<LoginResponse> {
         return __request(OpenAPI, {
             method: 'POST',
-            url: '/api/v1/auth/login',
+            url: '/api/auth/login',
             body: requestBody,
             mediaType: 'application/json',
             errors: {
@@ -43,7 +43,7 @@ export class AuthService {
     ): CancelablePromise<RefreshResponse> {
         return __request(OpenAPI, {
             method: 'POST',
-            url: '/api/v1/auth/refresh',
+            url: '/api/auth/refresh',
             body: requestBody,
             mediaType: 'application/json',
             errors: {

@@ -16,8 +16,8 @@ export type ResponsePaging = {
      */
     currentPage?: number;
     /**
-     * Has more pages flag
+     * Number of items on the current page
      */
-    hasMore?: boolean;
+    currentPageSize?: number;
 };
 

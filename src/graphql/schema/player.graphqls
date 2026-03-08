@@ -1,0 +1,120 @@
+extend type Mutation {
+    savePlayerTopics(topics: [PlayerTaskTopicInput!]!): Boolean!
+}
+
+# ── Domain types ─────────────────────────────────────────
+
+type Player {
+    id: Long!
+    agility: Int!
+    strength: Int!
+    intelligence: Int!
+    level: Level!
+    balance: Balance!
+    stamina: Stamina!
+    dayStreak: DayStreak!
+    monthlyActivity(year: Int!, month: Int!): MonthlyActivityResult!
+    taskTopics: PlayerTopicsResult!
+    activeTasks: ActiveTasksResult!
+    dailyTasks: DailyTasksResult!
+    closedTasks(paging: PagingInput!, options: SearchOptionsInput): ClosedPlayerTasksResult!
+}
+
+type CompleteTaskPlayer {
+    id: Long!
+    agility: Int!
+    strength: Int!
+    intelligence: Int!
+    level: Level!
+    balance: CompleteTaskBalance!
+    taskTopics: [PlayerTaskTopic!]!
+}
+
+type Level {
+    id: UUID!
+    level: Int!
+    totalExperience: Int!
+    currentExperience: Int!
+    experienceToNextLevel: Int!
+    assessment: Assessment!
+}
+
+type PlayerTaskTopic {
+    id: UUID!
+    version: Int!
+    isActive: Boolean!
+    taskTopic: TaskTopic!
+    level: Level!
+    isDisabled: Boolean!
+}
+
+type Stamina {
+    id: UUID!
+    current: Int!
+    max: Int!
+    isRegenerating: Boolean!
+    regenRate: Int!
+    regenIntervalSeconds: Int!
+    nextRegenAt: DateTime
+    fullRegenAt: DateTime
+}
+
+type DayStreak {
+    id: UUID!
+    current: Int!
+    max: Int!
+    isExtendedToday: Boolean!
+}
+
+# ── Result types ─────────────────────────────────────────
+
+type MonthlyActivityResult {
+    activeDays: [Int!]!
+}
+
+type PlayerTopicsResult {
+    topics: [PlayerTaskTopic!]!
+}
+
+# ── Input types ──────────────────────────────────────────
+
+input PlayerTaskTopicInput {
+    id: UUID!
+    version: Int!
+    isActive: Boolean!
+    taskTopic: TaskTopic!
+}
+
+# ── Enums ────────────────────────────────────────────────
+
+enum Rarity {
+    COMMON
+    UNCOMMON
+    RARE
+    EPIC
+    LEGENDARY
+}
+
+enum Assessment {
+    S
+    A
+    B
+    C
+    D
+    E
+}
+
+enum TaskTopic {
+    PHYSICAL_ACTIVITY
+    CREATIVITY
+    SOCIAL_SKILLS
+    NUTRITION
+    PRODUCTIVITY
+    ADVENTURE
+    MUSIC
+    BRAIN
+    CYBERSPORT
+    DEVELOPMENT
+    READING
+    LANGUAGE_LEARNING
+}

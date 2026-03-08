@@ -1,0 +1,153 @@
+fragment LevelFields on Level {
+  id
+  level
+  totalExperience
+  currentExperience
+  experienceToNextLevel
+  assessment
+}
+
+fragment MoneyFields on Money {
+  currencyCode
+  amount
+}
+
+fragment StaminaFields on Stamina {
+  id
+  current
+  max
+  isRegenerating
+  regenRate
+  regenIntervalSeconds
+  nextRegenAt
+  fullRegenAt
+}
+
+fragment DayStreakFields on DayStreak {
+  id
+  current
+  max
+  isExtendedToday
+}
+
+fragment TaskFields on Task {
+  id
+  title
+  description
+  experience
+  currencyReward
+  rarity
+  topics
+  agility
+  strength
+  intelligence
+}
+
+fragment PlayerTaskFields on PlayerTask {
+  id
+  createdAt
+  updatedAt
+  order
+  status
+  task {
+    ...TaskFields
+  }
+}
+
+fragment PlayerDailyTaskFields on PlayerDailyTask {
+  id
+  title
+  progress
+  goal
+  isCompleted
+}
+
+fragment PlayerTaskTopicFields on PlayerTaskTopic {
+  id
+  version
+  isActive
+  taskTopic
+  level {
+    ...LevelFields
+  }
+  isDisabled
+}
+
+fragment ResponsePagingFields on ResponsePaging {
+  totalRowCount
+  totalPageCount
+  currentPage
+  currentPageSize
+}
+
+fragment LeaderboardUserFields on LeaderboardUser {
+  id
+  firstName
+  lastName
+  photoUrl
+  score
+  position
+}
+
+fragment ResponseQueryOptionsFields on ResponseQueryOptions {
+  filters {
+    field
+    localization
+    items {
+      name
+      localization
+    }
+  }
+  sorts
+}
+
+fragment BalanceTransactionFields on BalanceTransaction {
+  id
+  amount {
+    ...MoneyFields
+  }
+  type
+  cause
+  createdAt
+}
+
+fragment UserProfileFields on User {
+  id
+  username
+  firstName
+  lastName
+  photoUrl
+  roles
+  locale {
+    tag
+    isManual
+  }
+  player {
+    id
+    agility
+    strength
+    intelligence
+    level {
+      ...LevelFields
+    }
+  }
+}
+
+fragment CompleteTaskPlayerFields on CompleteTaskPlayer {
+  id
+  agility
+  strength
+  intelligence
+  level {
+    ...LevelFields
+  }
+  balance {
+    id
+    amount {
+      ...MoneyFields
+    }
+  }
+  taskTopics {
+    ...PlayerTaskTopicFields
+  }
+}

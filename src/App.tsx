@@ -1,14 +1,15 @@
-import {useEffect, useState} from 'react';
+import {useEffect, useState, lazy, Suspense} from 'react';
 import { createPortal } from 'react-dom';
 import './App.css';
 import { config } from './config/environment';
-import MaintenanceScreen from './components/MaintenanceScreen';
-import TasksTab from './tabs/TasksTab';
-import ProfileTab from './tabs/ProfileTab';
-import BalanceTab from './tabs/BalanceTab';
-import MenuTab from './tabs/MenuTab';
-import BottomBar from './components/BottomBar';
-import {TelegramWidget} from './components/TelegramWidget';
+import MaintenanceScreen from './components/common/MaintenanceScreen';
+
+const TasksTab = lazy(() => import('./tabs/TasksTab'));
+const ProfileTab = lazy(() => import('./tabs/ProfileTab'));
+const BalanceTab = lazy(() => import('./tabs/BalanceTab'));
+const MenuTab = lazy(() => import('./tabs/MenuTab'));
+import BottomBar from './components/layout/BottomBar';
+import {TelegramWidget} from './components/common/TelegramWidget';
 import {
   HashRouter as Router,
   Routes,
@@ -16,28 +17,27 @@ import {
   Navigate,
   useLocation
 } from 'react-router-dom';
-import WelcomeTab from './tabs/WelcomeTab';
+const WelcomeTab = lazy(() => import('./tabs/WelcomeTab'));
 import {useAuth} from './hooks/useAuth';
 import {useLocaleSync} from './hooks/useLocaleSync';
 import {useWebSocketNotifications} from './hooks/useWebSocketNotifications';
-import {NotificationProvider} from './components/NotificationSystem';
-import {useTelegram, useTelegramWebApp} from './useTelegram';
+import {NotificationProvider} from './components/common/NotificationSystem';
+import {useTelegram, useTelegramWebApp} from './hooks/useTelegram';
 import {ModalProvider, useModal} from './contexts/ModalContext';
 import {useTelegramAdaptive} from './hooks/useTelegramAdaptive';
-import AuthLoadingScreen from './components/AuthLoadingScreen';
-import SessionExpiredDialog from './components/SessionExpiredDialog';
+import AuthLoadingScreen from './components/common/AuthLoadingScreen';
+import SessionExpiredDialog from './components/dialogs/SessionExpiredDialog';
 import {auth} from './auth';
-import ConfirmDialog from './components/ConfirmDialog';
+import UpdateOverlay from './components/common/UpdateOverlay';
 import {useUiUpdate} from './hooks/useUiUpdate';
-import {useLocalization} from './hooks/useLocalization';
-import {UserAdditionalInfoProvider} from './contexts/UserAdditionalInfoContext';
+import {AppDataProvider} from './contexts/AppDataContext';
 import {StreakOverlayProvider} from './contexts/StreakOverlayContext';
-import TopBar from './components/TopBar';
-import { DayStreakNavigator } from './components/DayStreakNavigator';
-import { DayStreakOverlay } from './components/DayStreakOverlay';
+import TopBar from './components/layout/TopBar';
+import { DayStreakNavigator } from './components/streak/DayStreakNavigator';
+import { DayStreakOverlay } from './components/streak/DayStreakOverlay';
 import { DayStreakOverlayProvider, useDayStreakOverlay } from './contexts/DayStreakOverlayContext';
-import StreakCalendarTab from './tabs/StreakCalendarTab';
-import {BackButtonStreakSync} from './components/BackButtonStreakSync';
+const StreakCalendarTab = lazy(() => import('./tabs/StreakCalendarTab'));
+import {BackButtonStreakSync} from './components/streak/BackButtonStreakSync';
 
 // Глобальный ref для хранения обработчика кнопки "Назад" (экспортируем для использования в MenuTab)
 export const globalBackButtonHandlerRef = { current: null as (() => void) | null };
@@ -67,17 +67,19 @@ function AuthenticatedLayout({
       )}
       <main className={`tab-content custom-scrollbar flex flex-col relative z-0 ${isAuthenticated ? 'tab-content-with-top-bar' : ''} ${isBottomBarVisible && !isDayStreakOverlayOpen ? 'tab-content-with-bottom-bar' : 'tab-content-without-bottom-bar'}`}>
         <div className="relative flex-1 min-h-0 flex flex-col">
-          <Routes>
-            <Route path="/" element={<WelcomeTab canStartAnimation={isLoadingScreenClosed} />}/>
-            <Route path="/welcome" element={<WelcomeTab canStartAnimation={isLoadingScreenClosed} />}/>
-            <Route path="/tasks" element={<TasksTab isAuthenticated={isAuthenticated}/>}/>
-            <Route path="/profile" element={<ProfileTab isAuthenticated={isAuthenticated}/>}/>
-            <Route path="/menu" element={<MenuTab isAuthenticated={isAuthenticated}/>}/>
-            <Route path="/leaderboard" element={<MenuTab isAuthenticated={isAuthenticated}/>}/>
-            <Route path="/balance" element={<BalanceTab isAuthenticated={isAuthenticated}/>}/>
-            <Route path="/streak" element={<StreakCalendarTab />}/>
-            <Route path="*" element={<Navigate to="/" replace/>}/>
-          </Routes>
+          <Suspense fallback={null}>
+            <Routes>
+              <Route path="/" element={<WelcomeTab canStartAnimation={isLoadingScreenClosed} />}/>
+              <Route path="/welcome" element={<WelcomeTab canStartAnimation={isLoadingScreenClosed} />}/>
+              <Route path="/tasks" element={<TasksTab isAuthenticated={isAuthenticated}/>}/>
+              <Route path="/profile" element={<ProfileTab isAuthenticated={isAuthenticated}/>}/>
+              <Route path="/menu" element={<MenuTab isAuthenticated={isAuthenticated}/>}/>
+              <Route path="/leaderboard" element={<MenuTab isAuthenticated={isAuthenticated}/>}/>
+              <Route path="/balance" element={<BalanceTab isAuthenticated={isAuthenticated}/>}/>
+              <Route path="/streak" element={<StreakCalendarTab />}/>
+              <Route path="*" element={<Navigate to="/" replace/>}/>
+            </Routes>
+          </Suspense>
         </div>
       </main>
       {isAuthenticated && (
@@ -90,15 +92,29 @@ function AuthenticatedLayout({
   );
 }
 
+// Prefetch all tab chunks right after initial render so lazy navigation is instant
+function usePrefetchTabs() {
+  useEffect(() => {
+    const id = setTimeout(() => {
+      import('./tabs/ProfileTab');
+      import('./tabs/BalanceTab');
+      import('./tabs/MenuTab');
+      import('./tabs/WelcomeTab');
+      import('./tabs/StreakCalendarTab');
+    }, 100);
+    return () => clearTimeout(id);
+  }, []);
+}
+
 function AppRoutes() {
   const location = useLocation();
   const { isBottomBarVisible } = useModal();
   const [isSessionExpired, setIsSessionExpired] = useState(false);
   const { backButton } = useTelegramWebApp();
-  const { t } = useLocalization();
   const { isUpdateAvailable, reason: updateReason, refreshNow } = useUiUpdate();
-  const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
-  
+
+  usePrefetchTabs();
+
   // Инициализируем Telegram WebApp
   useTelegram();
   
@@ -114,8 +130,8 @@ function AppRoutes() {
     isAuthLoading,
     authPromise
   } = useAuth();
-  // Один запрос getAdditionalInfo после авторизации: локаль + данные для UserAdditionalInfoProvider
-  const { isLocaleLoading, localeLoaded, additionalInfoData } = useLocaleSync(isAuthenticated);
+  // Single GetAppData bootstrap after auth: locale + all initial data for AppDataProvider
+  const { isLocaleLoading, localeLoaded, appData } = useLocaleSync(isAuthenticated);
 
   // Подключение к WebSocket после успешной авторизации
   useWebSocketNotifications({enabled: isAuthenticated, authPromise});
@@ -138,10 +154,6 @@ function AppRoutes() {
     });
   }, []);
 
-  useEffect(() => {
-    if (isUpdateAvailable) setIsUpdateDialogOpen(true);
-  }, [isUpdateAvailable]);
-
   // Автоматический скролл наверх при смене маршрута
   useEffect(() => {
     if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
@@ -154,15 +166,6 @@ function AppRoutes() {
     window.location.reload();
   };
 
-  const handleUpdateConfirm = () => {
-    refreshNow();
-  };
-
-  const handleUpdateCancel = () => {
-    // Мягкий режим: не форсим reload, просто закрываем.
-    // Если пользователю реально прилетит chunk 404 — сработает ChunkLoadError и мы снова предложим обновиться.
-    setIsUpdateDialogOpen(false);
-  };
 
 
   // Показываем экран загрузки пока идет авторизация ИЛИ (после авторизации) загрузка локализации
@@ -185,17 +188,10 @@ function AppRoutes() {
           onRefresh={handleRefreshPage}
         />
 
-        <ConfirmDialog
-          isOpen={isUpdateDialogOpen}
-          message={
-            updateReason === 'chunk_load_error'
-              ? t('dialogs.uiUpdate.chunkErrorMessage')
-              : t('dialogs.uiUpdate.message')
-          }
-          onConfirm={handleUpdateConfirm}
-          onCancel={handleUpdateCancel}
-          confirmText={t('dialogs.uiUpdate.refreshButton')}
-          cancelText={t('dialogs.uiUpdate.laterButton')}
+        <UpdateOverlay
+          isOpen={isUpdateAvailable}
+          reason={updateReason}
+          onRefresh={refreshNow}
         />
         
         {!isTelegramChecked ? null : (
@@ -206,10 +202,10 @@ function AppRoutes() {
               {authError && !showNoTelegramError && (
                   <TelegramWidget type="auth-error" errorMessage={authError}/>
               )}
-              {!showNoTelegramError && !authError && (isAuthenticated ? additionalInfoData != null : true) && (
-                  <UserAdditionalInfoProvider
+              {!showNoTelegramError && !authError && (isAuthenticated ? appData != null : true) && (
+                  <AppDataProvider
                     isAuthenticated={isAuthenticated}
-                    initialData={additionalInfoData ?? undefined}
+                    initialData={appData}
                   >
                     <DayStreakOverlayProvider>
                       <StreakOverlayProvider>
@@ -222,7 +218,7 @@ function AppRoutes() {
                         <DayStreakNavigator />
                       </StreakOverlayProvider>
                     </DayStreakOverlayProvider>
-                  </UserAdditionalInfoProvider>
+                  </AppDataProvider>
               )}
             </>
         )}
