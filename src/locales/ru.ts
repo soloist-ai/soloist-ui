@@ -395,8 +395,6 @@ export const ru = {
   menu: {
     tabs: {
       leaderboard: 'ТАБЛИЦА ЛИДЕРОВ',
-      lootboxes: 'ЛУТ БОКСЫ',
-      inventory: 'ИНВЕНТАРЬ',
       guilds: 'ГИЛЬДИИ',
       dungeons: 'ДАНЖИ',
     },
@@ -414,14 +412,6 @@ export const ru = {
       level: 'Уровень',
       tasks: 'Выполнено задач',
       balance: 'Баланс',
-    },
-    lootboxes: {
-      comingSoon: 'Скоро',
-      description: 'Лут боксы будут доступны в ближайшее время',
-    },
-    inventory: {
-      comingSoon: 'Скоро',
-      description: 'Инвентарь будет доступен в ближайшее время',
     },
     guilds: {
       comingSoon: 'Скоро',

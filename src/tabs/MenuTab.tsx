@@ -14,7 +14,7 @@ type MenuTabProps = {
   isAuthenticated: boolean;
 };
 
-type TabMode = 'main' | 'leaderboard' | 'lootboxes' | 'inventory' | 'guilds' | 'dungeons' | 'userProfile';
+type TabMode = 'main' | 'leaderboard' | 'guilds' | 'dungeons' | 'userProfile';
 
 const MenuTab: React.FC<MenuTabProps> = ({ isAuthenticated }) => {
   const [tabMode, setTabMode] = useState<TabMode>('main');
@@ -42,9 +42,9 @@ const MenuTab: React.FC<MenuTabProps> = ({ isAuthenticated }) => {
     currentTabModeRef.current = tabMode;
     
     if (tabMode === 'leaderboard' && !isBackButtonInitializedRef.current) {
-      // Показываем кнопку и устанавливаем обработчик только один раз при первом открытии лидерборда
+      // Показываем кнопку и устанавливаем обработчик только один раз при первом открытии
       backButton.show();
-      
+
       const handleBack = () => {
         const currentMode = currentTabModeRef.current;
         if (currentMode === 'userProfile') {
@@ -56,7 +56,7 @@ const MenuTab: React.FC<MenuTabProps> = ({ isAuthenticated }) => {
           setTabMode('main');
         }
       };
-      
+
       globalBackButtonHandlerRef.current = handleBack;
       backButton.onClick(handleBack);
       isBackButtonInitializedRef.current = true;
@@ -79,7 +79,8 @@ const MenuTab: React.FC<MenuTabProps> = ({ isAuthenticated }) => {
   }, [tabMode]);
 
   const handleTabChange = (mode: TabMode) => {
-    if (mode === 'lootboxes' || mode === 'inventory' || mode === 'guilds' || mode === 'dungeons') {
+    // guilds и dungeons ещё не готовы — блокируем
+    if (mode === 'guilds' || mode === 'dungeons') {
       return;
     }
     setTabMode(mode);
@@ -87,7 +88,7 @@ const MenuTab: React.FC<MenuTabProps> = ({ isAuthenticated }) => {
   };
 
   // Задержки для последовательного появления карточек (CSS animation-delay, без задержки до старта)
-  const CARD_STAGGER_DELAYS = [0, 0.14, 0.28, 0.42, 0.56];
+  const CARD_STAGGER_DELAYS = [0, 0.14, 0.28];
 
   // Главная страница меню — плашки с CSS-анимацией появления (старт в момент отрисовки)
   if (tabMode === 'main') {
@@ -144,81 +145,13 @@ const MenuTab: React.FC<MenuTabProps> = ({ isAuthenticated }) => {
               </div>
             </button>
 
-            {/* Карточка Лут боксы */}
-            <button
-              onClick={() => handleTabChange('lootboxes')}
-              disabled
-              className="menu-card-enter-disabled w-full relative overflow-hidden rounded-3xl p-6 md:p-8 transition-all duration-300 cursor-not-allowed group h-32 flex items-center"
-              style={{
-                animationDelay: `${CARD_STAGGER_DELAYS[1]}s`,
-                background: 'rgba(255, 255, 255, 0.05)',
-                backdropFilter: `blur(${getOptimizedBlur('20px', '8px')})`,
-                WebkitBackdropFilter: `blur(${getOptimizedBlur('20px', '8px')})`,
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04), 0 4px 24px rgba(0,0,0,0.4)'
-              }}
-            >
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{
-                background: 'linear-gradient(135deg, rgba(251, 146, 60, 0.08) 0%, rgba(255, 165, 0, 0.1) 25%, rgba(234, 88, 12, 0.08) 50%, rgba(255, 165, 0, 0.1) 75%, rgba(251, 146, 60, 0.08) 100%)',
-                backgroundSize: '200% 200%',
-                animation: 'holographic-shimmer 4s ease-in-out infinite'
-              }}></div>
-              <div className="flex items-center justify-between w-full relative z-10">
-                <div className="flex-1">
-                  <h2 className="text-3xl md:text-4xl font-tech font-bold" style={{ color: '#f4f4f5' }}>
-                    {t('menu.tabs.lootboxes')}
-                  </h2>
-                  <p className="text-sm md:text-base font-tech mt-1" style={{ color: 'rgba(255,255,255,0.65)' }}>
-                    {t('menu.lootboxes.comingSoon')}
-                  </p>
-                </div>
-                <div className="flex-shrink-0" style={{ color: 'rgba(255,255,255,0.85)' }}>
-                  <Icon type="gift" size={48} />
-                </div>
-              </div>
-            </button>
-
-            {/* Карточка Инвентарь */}
-            <button
-              onClick={() => handleTabChange('inventory')}
-              disabled
-              className="menu-card-enter-disabled w-full relative overflow-hidden rounded-3xl p-6 md:p-8 transition-all duration-300 cursor-not-allowed group h-32 flex items-center"
-              style={{
-                animationDelay: `${CARD_STAGGER_DELAYS[2]}s`,
-                background: 'rgba(255, 255, 255, 0.05)',
-                backdropFilter: `blur(${getOptimizedBlur('20px', '8px')})`,
-                WebkitBackdropFilter: `blur(${getOptimizedBlur('20px', '8px')})`,
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04), 0 4px 24px rgba(0,0,0,0.4)'
-              }}
-            >
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{
-                background: 'linear-gradient(135deg, rgba(236, 72, 153, 0.08) 0%, rgba(219, 39, 119, 0.1) 25%, rgba(168, 85, 247, 0.06) 50%, rgba(219, 39, 119, 0.1) 75%, rgba(236, 72, 153, 0.08) 100%)',
-                backgroundSize: '200% 200%',
-                animation: 'holographic-shimmer 4s ease-in-out infinite'
-              }}></div>
-              <div className="flex items-center justify-between w-full relative z-10">
-                <div className="flex-1">
-                  <h2 className="text-3xl md:text-4xl font-tech font-bold" style={{ color: '#f4f4f5' }}>
-                    {t('menu.tabs.inventory')}
-                  </h2>
-                  <p className="text-sm md:text-base font-tech mt-1" style={{ color: 'rgba(255,255,255,0.65)' }}>
-                    {t('menu.inventory.comingSoon')}
-                  </p>
-                </div>
-                <div className="flex-shrink-0" style={{ color: 'rgba(255,255,255,0.85)' }}>
-                  <Icon type="bag" size={48} />
-                </div>
-              </div>
-            </button>
-
             {/* Карточка Гильдии */}
             <button
               onClick={() => handleTabChange('guilds')}
               disabled
               className="menu-card-enter-disabled w-full relative overflow-hidden rounded-3xl p-6 md:p-8 transition-all duration-300 cursor-not-allowed group h-32 flex items-center"
               style={{
-                animationDelay: `${CARD_STAGGER_DELAYS[3]}s`,
+                animationDelay: `${CARD_STAGGER_DELAYS[1]}s`,
                 background: 'rgba(255, 255, 255, 0.05)',
                 backdropFilter: `blur(${getOptimizedBlur('20px', '8px')})`,
                 WebkitBackdropFilter: `blur(${getOptimizedBlur('20px', '8px')})`,
@@ -252,7 +185,7 @@ const MenuTab: React.FC<MenuTabProps> = ({ isAuthenticated }) => {
               disabled
               className="menu-card-enter-disabled w-full relative overflow-hidden rounded-3xl p-6 md:p-8 transition-all duration-300 cursor-not-allowed group h-32 flex items-center"
               style={{
-                animationDelay: `${CARD_STAGGER_DELAYS[4]}s`,
+                animationDelay: `${CARD_STAGGER_DELAYS[2]}s`,
                 background: 'rgba(255, 255, 255, 0.05)',
                 backdropFilter: `blur(${getOptimizedBlur('20px', '8px')})`,
                 WebkitBackdropFilter: `blur(${getOptimizedBlur('20px', '8px')})`,
@@ -374,16 +307,12 @@ const MenuTab: React.FC<MenuTabProps> = ({ isAuthenticated }) => {
   // Заглушки для других функционалов
   const getIconForTab = (mode: TabMode): IconType => {
     switch (mode) {
-      case 'lootboxes':
-        return 'gift';
-      case 'inventory':
-        return 'bag';
       case 'guilds':
         return 'users-group';
       case 'dungeons':
         return 'dungeon';
       default:
-        return 'bag';
+        return 'dungeon';
     }
   };
 

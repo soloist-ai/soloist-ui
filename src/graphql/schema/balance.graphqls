@@ -3,7 +3,7 @@
 type Balance {
     id: UUID!
     amount: Money!
-    transactions(paging: PagingInput, !options: SearchOptionsInput): SearchBalanceTransactionsResult!
+    transactions(paging: PagingInput!, options: SearchOptionsInput): SearchBalanceTransactionsResult!
 }
 
 type CompleteTaskBalance {

@@ -396,8 +396,6 @@ export const en = {
   menu: {
     tabs: {
       leaderboard: 'LEADERBOARD',
-      lootboxes: 'LOOT BOXES',
-      inventory: 'INVENTORY',
       guilds: 'GUILDS',
       dungeons: 'DUNGEONS',
     },
@@ -415,14 +413,6 @@ export const en = {
       level: 'Level',
       tasks: 'Completed Tasks',
       balance: 'Balance',
-    },
-    lootboxes: {
-      comingSoon: 'Coming Soon',
-      description: 'Loot boxes will be available soon',
-    },
-    inventory: {
-      comingSoon: 'Coming Soon',
-      description: 'Inventory will be available soon',
     },
     guilds: {
       comingSoon: 'Coming Soon',
