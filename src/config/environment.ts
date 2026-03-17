@@ -62,6 +62,8 @@ if (typeof window !== 'undefined') {
 
 export const { env, apiBaseUrl, wsUrl, isDevelopment, isProduction, useMocks, isMaintenanceMode } = config;
 
+export const TELEGRAM_BOT_USERNAME = import.meta.env.VITE_TELEGRAM_BOT_USERNAME || 'SoloistBot';
+
 export const getConfigByEnvironment = (environment: Environment): EnvironmentConfig =>
   environment === 'production' ? productionConfig : developmentConfig;
 

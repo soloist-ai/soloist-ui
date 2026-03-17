@@ -156,60 +156,37 @@ export const en = {
 
   // Tasks
   tasks: {
-    title: 'Your Tasks',
-    subtitle: 'Develop every day with personalized assignments',
-    stamina: {
-      title: 'Stamina',
-      nextRegen: 'Next regeneration',
-      fullRegen: 'Full regeneration',
-      now: 'Now',
-      fullyRestored: 'Fully restored',
-      regenRate: 'Regeneration',
-      every: 'every',
-      seconds: 'sec',
-      minutes: 'min',
-      hours: 'h',
-      hoverForDetails: 'Hover for details',
-      insufficientStamina: 'Not enough stamina. Required: {{required}}, you have: {{current}}',
+    title: 'Tasks',
+    subtitle: 'Complete tasks and earn GEM',
+    defaultTasks: 'Daily Tasks',
+    customTasks: 'Custom Tasks',
+    taskHistory: 'History',
+    createTask: 'Create Task',
+    submitProof: 'Submit Proof',
+    completed: 'Completed',
+    gemReward: '+{{amount}} GEM',
+    proofType: {
+      TEXT: 'Text proof',
+      PHOTO: 'Photo proof',
+      VIDEO: 'Video proof',
     },
-    noTasks: {
-      title: 'Choose Your Topics',
-      subtitle: 'This will help select the best tasks for you and create a personal development plan',
-      button: 'Go to Topics',
+    taskType: {
+      STEPS: 'Steps',
+      PUSH_UPS: 'Push-ups',
+      SQUATS: 'Squats',
     },
-    status: {
-      preparing: 'Preparing',
-      inProgress: 'In Progress',
-      pendingCompletion: 'Pending Completion',
-      completed: 'Completed',
-      skipped: 'Skipped',
+    createForm: {
+      title: 'Create Custom Task',
+      titleLabel: 'Task Title',
+      titlePlaceholder: 'What do you want to accomplish?',
+      descriptionLabel: 'Description',
+      descriptionPlaceholder: 'Describe what you need to do...',
+      submit: 'Create',
+      validating: 'AI is validating your task...',
+      rejected: 'Task rejected: {{reason}}',
     },
-    actions: {
-      complete: 'Complete',
-      replace: 'Replace',
-    },
-    buttons: {
-      complete: 'Done',
-      replace: 'Replace',
-    },
-    confirm: {
-      complete: 'Are you sure you want to complete this task?',
-      replace: 'Are you sure you want to replace this task?',
-    },
-    viewMode: {
-      active: 'Active',
-      completed: 'Completed',
-      daily: 'Daily',
-    },
-    daily: {
-      empty: 'No daily tasks for today',
-    },
-    noCompletedTasks: 'No completed tasks',
-    noCompletedTasksDescription: 'Complete tasks to see them here!',
-    noCompletedTasksByFilterDescription: 'Nothing found for the selected filters.',
-    filters: {
-      reset: 'Reset Filters',
-    },
+    noTasks: 'No custom tasks yet',
+    noHistory: 'No completed tasks yet',
   },
 
   // Topics

@@ -1,29 +1,11 @@
-mutation GenerateTasks {
-  generateTasks
-}
-
-mutation CompleteTask($id: UUID!) {
-  completeTask(id: $id) {
-    playerBefore {
-      ...CompleteTaskPlayerFields
-    }
-    playerAfter {
-      ...CompleteTaskPlayerFields
+mutation CreateCustomTask($name: String!) {
+  createCustomTask(name: $name) {
+    isValid
+    rejectionReason
+    task {
+      ...TaskFields
     }
   }
-}
-
-mutation SkipTask($id: UUID!) {
-  skipTask(id: $id)
-}
-
-mutation SavePlayerTopics($topics: [PlayerTaskTopicInput!]!) {
-  savePlayerTopics(topics: $topics)
-}
-
-mutation SavePlayerTopicsAndGenerate($topics: [PlayerTaskTopicInput!]!) {
-  savePlayerTopics(topics: $topics)
-  generateTasks
 }
 
 mutation UpdateUserLocale($locale: UserLocaleInput!) {

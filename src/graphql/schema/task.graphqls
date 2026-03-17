@@ -1,68 +1,50 @@
 extend type Mutation {
-    generateTasks: Boolean!
-    completeTask(id: UUID!): CompleteTaskResult!
-    skipTask(id: UUID!): Boolean!
+    createCustomTask(name: String!): CreateCustomTaskResult!
 }
 
 # ── Domain types ─────────────────────────────────────────
 
 type Task {
     id: UUID!
-    title: String!
-    description: String
-    experience: Int!
-    currencyReward: Int!
-    rarity: Rarity!
-    topics: [TaskTopic!]!
-    agility: Int!
-    strength: Int!
-    intelligence: Int!
-}
-
-type PlayerTask {
-    id: UUID!
-    createdAt: DateTime!
-    updatedAt: DateTime!
-    order: Int!
-    status: PlayerTaskStatus!
-    task: Task!
-}
-
-type PlayerDailyTask {
-    id: UUID!
-    title: String!
-    progress: BigDecimal!
-    goal: BigDecimal!
+    type: TaskType!
+    name: String
+    goal: Int!
+    progress: Int!
+    gemReward: Int!
     isCompleted: Boolean!
+    proofType: ProofType!
+    day: Date!
+    createdAt: DateTime!
 }
 
 # ── Result types ─────────────────────────────────────────
 
-type ActiveTasksResult {
-    tasks: [PlayerTask!]!
-    isFirstTime: Boolean!
+type TasksResult {
+    tasks: [Task!]!
 }
 
-type DailyTasksResult {
-    tasks: [PlayerDailyTask!]!
-}
-
-type CompleteTaskResult {
-    playerBefore: CompleteTaskPlayer!
-    playerAfter: CompleteTaskPlayer!
-}
-
-type ClosedPlayerTasksResult {
-    tasks: [PlayerTask!]!
+type TaskHistoryResult {
+    tasks: [Task!]!
     paging: ResponsePaging!
-    options: ResponseQueryOptions
+}
+
+type CreateCustomTaskResult {
+    isValid: Boolean!
+    rejectionReason: String
+    task: Task
 }
 
 # ── Enums ────────────────────────────────────────────────
 
-enum PlayerTaskStatus {
-    PREPARING
-    IN_PROGRESS
-    COMPLETED
-    SKIPPED
+enum TaskType {
+    STEPS
+    PUSH_UPS
+    SQUATS
+    CUSTOM
+}
+
+enum ProofType {
+    TEXT
+    PHOTO
+    VIDEO
 }

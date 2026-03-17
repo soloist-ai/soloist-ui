@@ -1,12 +1,12 @@
 import { useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { gqlSdk } from '../graphql/client';
-import type { PlayerTask, Stamina } from '../graphql/generated';
+import type { TaskFieldsFragment } from '../components/tasks/TaskCard';
 import { NotificationSource } from '../api';
 
 interface UseTasksRefreshProps {
   isAuthenticated: boolean;
-  onTasksUpdate: (tasks: PlayerTask[], stamina?: Stamina, isFirstTime?: boolean) => void;
+  onTasksUpdate: (tasks: TaskFieldsFragment[]) => void;
 }
 
 export const useTasksRefresh = ({ isAuthenticated, onTasksUpdate }: UseTasksRefreshProps) => {
@@ -16,23 +16,10 @@ export const useTasksRefresh = ({ isAuthenticated, onTasksUpdate }: UseTasksRefr
   const refreshTasks = useCallback(async () => {
     if (!isAuthenticated || !isTasksTabActive) return;
     try {
-      const { me } = await gqlSdk.RefreshActiveTasks();
-      const { activeTasks, stamina } = me.player;
-      onTasksUpdate(activeTasks.tasks, stamina, activeTasks.isFirstTime);
-
-      // Race condition guard: WS notification may arrive before tasks are
-      // persisted. If server still says isFirstTime=true, retry once after delay.
-      if (activeTasks.isFirstTime) {
-        setTimeout(async () => {
-          try {
-            const { me: me2 } = await gqlSdk.RefreshActiveTasks();
-            const { activeTasks: at2, stamina: s2 } = me2.player;
-            onTasksUpdate(at2.tasks, s2, at2.isFirstTime);
-          } catch { /* silent */ }
-        }, 3000);
-      }
+      const { me } = await gqlSdk.GetTasks();
+      onTasksUpdate(me.player.tasks.tasks as TaskFieldsFragment[]);
     } catch (error) {
-      console.error('Error refreshing tasks:', error);
+      console.error('[useTasksRefresh] refresh failed:', error);
     }
   }, [isAuthenticated, isTasksTabActive, onTasksUpdate]);
 
@@ -40,7 +27,7 @@ export const useTasksRefresh = ({ isAuthenticated, onTasksUpdate }: UseTasksRefr
     if (!isAuthenticated || !isTasksTabActive) return;
 
     const handleTasksNotification = (event: CustomEvent) => {
-if (event.detail?.source === NotificationSource.TASKS) refreshTasks();
+      if (event.detail?.source === NotificationSource.TASKS) refreshTasks();
     };
 
     window.addEventListener('tasks-notification', handleTasksNotification as EventListener);

@@ -12,6 +12,11 @@ query GetAppData {
       dayStreak {
         ...DayStreakFields
       }
+      tasks {
+        tasks {
+          ...TaskFields
+        }
+      }
     }
   }
 }
@@ -28,32 +33,6 @@ query GetUserLocale {
 }
 
 # ── Targeted refreshes after WS notifications ────────────────────────────────
-
-query RefreshActiveTasks {
-  me {
-    player {
-      activeTasks {
-        isFirstTime
-        tasks {
-          ...PlayerTaskFields
-        }
-      }
-      stamina {
-        ...StaminaFields
-      }
-    }
-  }
-}
-
-query GetPlayerStamina {
-  me {
-    player {
-      stamina {
-        ...StaminaFields
-      }
-    }
-  }
-}
 
 query RefreshDayStreak {
   me {
@@ -74,13 +53,29 @@ query GetUserProfile {
   }
 }
 
-# TopicsSection — own fetch on mount
-query GetPlayerTopics {
+# TasksTab — fetch tasks on open / refresh
+query GetTasks {
   me {
     player {
-      taskTopics {
-        topics {
-          ...PlayerTaskTopicFields
+      tasks {
+        tasks {
+          ...TaskFields
+        }
+      }
+    }
+  }
+}
+
+# TasksTab — task history with pagination
+query GetTaskHistory($paging: PagingInput!) {
+  me {
+    player {
+      taskHistory(paging: $paging) {
+        tasks {
+          ...TaskFields
+        }
+        paging {
+          ...ResponsePagingFields
         }
       }
     }
@@ -153,18 +148,6 @@ query GetMonthlyActivity($year: Int!, $month: Int!) {
   }
 }
 
-query GetDailyTasks {
-  me {
-    player {
-      dailyTasks {
-        tasks {
-          ...PlayerDailyTaskFields
-        }
-      }
-    }
-  }
-}
-
 # ── Paginated queries — only list fields, no extra data ──────────────────────
 
 query GetBalanceTransactions($paging: PagingInput!, $options: SearchOptionsInput) {
@@ -181,24 +164,6 @@ query GetBalanceTransactions($paging: PagingInput!, $options: SearchOptionsInput
           options {
             ...ResponseQueryOptionsFields
           }
-        }
-      }
-    }
-  }
-}
-
-query GetClosedTasks($paging: PagingInput!, $options: SearchOptionsInput) {
-  me {
-    player {
-      closedTasks(paging: $paging, options: $options) {
-        tasks {
-          ...PlayerTaskFields
-        }
-        paging {
-          ...ResponsePagingFields
-        }
-        options {
-          ...ResponseQueryOptionsFields
         }
       }
     }

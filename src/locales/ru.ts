@@ -155,60 +155,37 @@ export const ru = {
 
   // Задачи
   tasks: {
-    title: 'Твои задачи',
-    subtitle: 'Развивайся каждый день с персональными заданиями',
-    stamina: {
-      title: 'Стамина',
-      nextRegen: 'Следующее восстановление',
-      fullRegen: 'Полное восстановление',
-      now: 'Сейчас',
-      fullyRestored: 'Полностью восстановлена',
-      regenRate: 'Восстановление',
-      every: 'каждые',
-      seconds: 'сек',
-      minutes: 'мин',
-      hours: 'ч',
-      hoverForDetails: 'Наведите для подробностей',
-      insufficientStamina: 'Недостаточно стамины. Требуется: {{required}}, у вас: {{current}}',
+    title: 'Задачи',
+    subtitle: 'Выполняй задачи и зарабатывай GEM',
+    defaultTasks: 'Ежедневные задачи',
+    customTasks: 'Мои задачи',
+    taskHistory: 'История',
+    createTask: 'Создать задачу',
+    submitProof: 'Отправить доказательство',
+    completed: 'Выполнено',
+    gemReward: '+{{amount}} GEM',
+    proofType: {
+      TEXT: 'Текст',
+      PHOTO: 'Фото',
+      VIDEO: 'Видео',
     },
-    noTasks: {
-      title: 'Выбери свои темы',
-      subtitle: 'Это поможет подобрать для тебя лучшие задачи и создать персональный план развития',
-      button: 'Перейти к темам',
+    taskType: {
+      STEPS: 'Шаги',
+      PUSH_UPS: 'Отжимания',
+      SQUATS: 'Приседания',
     },
-    status: {
-      preparing: 'Подготовка',
-      inProgress: 'В процессе',
-      pendingCompletion: 'Ожидает завершения',
-      completed: 'Завершено',
-      skipped: 'Пропущено',
+    createForm: {
+      title: 'Создать задачу',
+      titleLabel: 'Название задачи',
+      titlePlaceholder: 'Что вы хотите сделать?',
+      descriptionLabel: 'Описание',
+      descriptionPlaceholder: 'Опишите, что нужно сделать...',
+      submit: 'Создать',
+      validating: 'ИИ проверяет задачу...',
+      rejected: 'Задача отклонена: {{reason}}',
     },
-    actions: {
-      complete: 'Завершить',
-      replace: 'Заменить',
-    },
-    buttons: {
-      complete: 'Готово',
-      replace: 'Заменить',
-    },
-    confirm: {
-      complete: 'Вы уверены, что хотите завершить эту задачу?',
-      replace: 'Вы уверены, что хотите заменить эту задачу?',
-    },
-    viewMode: {
-      active: 'Активные',
-      completed: 'Завершенные',
-      daily: 'Ежедневные',
-    },
-    daily: {
-      empty: 'Нет ежедневных задач на сегодня',
-    },
-    noCompletedTasks: 'Нет завершенных задач',
-    noCompletedTasksDescription: 'Выполняйте задачи, чтобы увидеть их здесь!',
-    noCompletedTasksByFilterDescription: 'По выбранным фильтрам ничего не найдено.',
-    filters: {
-      reset: 'Сбросить фильтры',
-    },
+    noTasks: 'Нет пользовательских задач',
+    noHistory: 'Нет выполненных задач',
   },
 
   // Темы

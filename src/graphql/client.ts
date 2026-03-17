@@ -36,65 +36,192 @@ function buildRequestHeaders(): Record<string, string> {
 
 // ── Mock support ────────────────────────────────────────────────────────────
 
+/** Mock task state — shared across operations in a single session */
+const mockTaskState = (() => {
+  const today = new Date().toISOString().split('T')[0];
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+
+  let tasks = [
+    {
+      id: 'dt-steps',
+      type: 'STEPS',
+      name: null,
+      goal: 8000,
+      progress: 3200,
+      gemReward: 50,
+      isCompleted: false,
+      proofType: 'PHOTO',
+      day: today,
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: 'dt-pushups',
+      type: 'PUSH_UPS',
+      name: null,
+      goal: 30,
+      progress: 0,
+      gemReward: 40,
+      isCompleted: false,
+      proofType: 'PHOTO',
+      day: today,
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: 'dt-squats',
+      type: 'SQUATS',
+      name: null,
+      goal: 50,
+      progress: 50,
+      gemReward: 40,
+      isCompleted: true,
+      proofType: 'PHOTO',
+      day: today,
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: 'ct-1',
+      type: 'CUSTOM',
+      name: 'Read 30 pages',
+      goal: 1,
+      progress: 0,
+      gemReward: 60,
+      isCompleted: false,
+      proofType: 'PHOTO',
+      day: today,
+      createdAt: new Date(Date.now() - 86400000).toISOString(),
+    },
+  ];
+
+  const historyTasks = [
+    {
+      id: 'h-1',
+      type: 'STEPS',
+      name: null,
+      goal: 5000,
+      progress: 5000,
+      gemReward: 100,
+      isCompleted: true,
+      proofType: 'PHOTO',
+      day: new Date(Date.now() - 172800000).toISOString().split('T')[0],
+      createdAt: new Date(Date.now() - 172800000).toISOString(),
+    },
+    {
+      id: 'h-2',
+      type: 'PUSH_UPS',
+      name: null,
+      goal: 30,
+      progress: 30,
+      gemReward: 40,
+      isCompleted: true,
+      proofType: 'VIDEO',
+      day: new Date(Date.now() - 259200000).toISOString().split('T')[0],
+      createdAt: new Date(Date.now() - 259200000).toISOString(),
+    },
+    {
+      id: 'h-3',
+      type: 'CUSTOM',
+      name: 'Meditate 15 minutes',
+      goal: 1,
+      progress: 1,
+      gemReward: 55,
+      isCompleted: true,
+      proofType: 'TEXT',
+      day: new Date(Date.now() - 345600000).toISOString().split('T')[0],
+      createdAt: new Date(Date.now() - 345600000).toISOString(),
+    },
+  ];
+
+  return {
+    getTasks: () => [...tasks],
+    getHistoryTasks: () => [...historyTasks],
+    createCustomTask: (name: string) => {
+      // Simple mock validation: reject if name is too short
+      if (name.trim().length < 5) {
+        return { isValid: false, rejectionReason: 'Task name is too vague', task: null };
+      }
+      const newTask = {
+        id: `ct-${Date.now()}`,
+        type: 'CUSTOM',
+        name,
+        goal: 1,
+        progress: 0,
+        gemReward: 50 + Math.floor(Math.random() * 50),
+        isCompleted: false,
+        proofType: ['TEXT', 'PHOTO', 'VIDEO'][Math.floor(Math.random() * 3)] as string,
+        day: today,
+        createdAt: new Date().toISOString(),
+      };
+      tasks = [...tasks, newTask];
+      return { isValid: true, rejectionReason: null, task: { ...newTask } };
+    },
+  };
+})();
+
 async function handleGraphqlMock(operationName: string, variables?: Record<string, unknown>): Promise<unknown> {
   const { mockUserService, mockPlayerService } = await import('../mocks/mockApi');
 
+  // Simulate network delay
+  await new Promise((r) => setTimeout(r, 300));
+
   switch (operationName) {
     case 'GetAppData': {
-      const [userData, tasksData, topicsData, balanceData, additionalInfo] = await Promise.all([
+      const [userData, additionalInfo] = await Promise.all([
         mockUserService.getCurrentUser(),
-        mockPlayerService.getActiveTasks(),
-        mockPlayerService.getCurrentPlayerTopics(),
-        mockPlayerService.getPlayerBalance(),
         mockUserService.getUserAdditionalInfo(),
       ]);
       const u = userData.user;
       return {
         me: {
           id: u.id,
-          username: u.username,
-          firstName: u.firstName,
-          lastName: u.lastName,
           photoUrl: u.photoUrl,
           locale: additionalInfo.locale ? { tag: String(additionalInfo.locale), isManual: false } : null,
           roles: additionalInfo.roles ?? [],
           player: {
-            id: u.player.id,
-            agility: u.player.agility,
-            strength: u.player.strength,
-            intelligence: u.player.intelligence,
-            level: u.player.level,
-            stamina: tasksData.stamina,
             dayStreak: additionalInfo.dayStreak,
-            balance: balanceData.balance
-              ? { id: balanceData.balance.id, amount: balanceData.balance.balance }
-              : null,
-            taskTopics: { topics: topicsData.playerTaskTopics },
-            activeTasks: { tasks: tasksData.tasks, isFirstTime: tasksData.isFirstTime },
+            tasks: {
+              tasks: mockTaskState.getTasks(),
+            },
           },
         },
       };
     }
-    case 'GetPlayerStamina': {
-      const data = await mockPlayerService.getActiveTasks();
+    case 'GetTasks': {
       return {
         me: {
           player: {
-            stamina: data.stamina,
+            tasks: {
+              tasks: mockTaskState.getTasks(),
+            },
           },
         },
       };
     }
-    case 'RefreshActiveTasks': {
-      const data = await mockPlayerService.getActiveTasks();
+    case 'GetTaskHistory': {
+      const page = (variables?.paging as { page?: number })?.page ?? 0;
+      const pageSize = (variables?.paging as { pageSize?: number })?.pageSize ?? 20;
+      const all = mockTaskState.getHistoryTasks();
+      const start = page * pageSize;
+      const sliced = all.slice(start, start + pageSize);
       return {
         me: {
           player: {
-            activeTasks: { tasks: data.tasks, isFirstTime: data.isFirstTime },
-            stamina: data.stamina,
+            taskHistory: {
+              tasks: sliced,
+              paging: {
+                totalRowCount: all.length,
+                totalPageCount: Math.ceil(all.length / pageSize),
+                currentPage: page,
+                currentPageSize: sliced.length,
+              },
+            },
           },
         },
       };
+    }
+    case 'CreateCustomTask': {
+      const name = variables?.name as string;
+      const result = mockTaskState.createCustomTask(name);
+      return { createCustomTask: result };
     }
     case 'RefreshDayStreak': {
       const data = await mockUserService.getUserAdditionalInfo();
@@ -116,13 +243,7 @@ async function handleGraphqlMock(operationName: string, variables?: Record<strin
           photoUrl: u.photoUrl,
           roles: [],
           locale: u.locale ? { tag: String(u.locale), isManual: false } : null,
-          player: {
-            id: u.player.id,
-            agility: u.player.agility,
-            strength: u.player.strength,
-            intelligence: u.player.intelligence,
-            level: u.player.level,
-          },
+          player: { id: u.player.id },
         },
       };
     }
@@ -142,23 +263,9 @@ async function handleGraphqlMock(operationName: string, variables?: Record<strin
           roles: [],
           player: {
             id: u.player.id,
-            agility: u.player.agility,
-            strength: u.player.strength,
-            intelligence: u.player.intelligence,
-            level: u.player.level,
             balance: u.player.balance
               ? { id: u.player.balance.id, amount: u.player.balance.balance }
               : null,
-          },
-        },
-      };
-    }
-    case 'GetPlayerTopics': {
-      const data = await mockPlayerService.getCurrentPlayerTopics();
-      return {
-        me: {
-          player: {
-            taskTopics: { topics: data.playerTaskTopics },
           },
         },
       };
@@ -197,21 +304,6 @@ async function handleGraphqlMock(operationName: string, variables?: Record<strin
                 transactions: data.transactions,
                 paging: data.paging,
               },
-            },
-          },
-        },
-      };
-    }
-    case 'GetClosedTasks': {
-      const page = (variables?.paging as { page?: number })?.page;
-      const pageSize = (variables?.paging as { pageSize?: number })?.pageSize ?? 20;
-      const data = await mockPlayerService.searchPlayerTasks({}, page, pageSize);
-      return {
-        me: {
-          player: {
-            closedTasks: {
-              tasks: data.tasks,
-              paging: data.paging,
             },
           },
         },
@@ -256,60 +348,18 @@ async function handleGraphqlMock(operationName: string, variables?: Record<strin
         },
       };
     }
-    case 'GetDailyTasks': {
-      const data = await mockPlayerService.getDailyTasks();
-      return {
-        me: {
-          player: {
-            dailyTasks: { tasks: data.tasks },
-          },
-        },
-      };
-    }
-    case 'GenerateTasks': {
-      await mockPlayerService.generateTasks();
-      return { generateTasks: true };
-    }
-    case 'CompleteTask': {
-      const taskId = variables?.id as string;
-      const data = await mockPlayerService.completeTask(taskId);
-      // Map old REST Player to GraphQL CompleteTaskPlayer shape
-      const mapPlayer = (p: typeof data.playerBefore) => ({
-        id: p.id,
-        agility: p.agility,
-        strength: p.strength,
-        intelligence: p.intelligence,
-        level: p.level,
-        balance: p.balance ? { id: p.balance.id, amount: p.balance.balance } : null,
-        taskTopics: p.taskTopics ?? [],
-      });
-      return {
-        completeTask: {
-          playerBefore: mapPlayer(data.playerBefore),
-          playerAfter: mapPlayer(data.playerAfter),
-        },
-      };
-    }
-    case 'SkipTask': {
-      const taskId = variables?.id as string;
-      await mockPlayerService.skipTask(taskId);
-      return { skipTask: true };
-    }
-    case 'SavePlayerTopics': {
-      const topics = variables?.topics as any[];
-      await mockPlayerService.savePlayerTopics({ playerTaskTopics: topics });
-      return { savePlayerTopics: true };
-    }
-    case 'SavePlayerTopicsAndGenerate': {
-      const topics = variables?.topics as any[];
-      await mockPlayerService.savePlayerTopics({ playerTaskTopics: topics });
-      await mockPlayerService.generateTasks();
-      return { savePlayerTopics: true, generateTasks: true };
-    }
     case 'UpdateUserLocale': {
       const locale = variables?.locale as { tag: string; isManual: boolean };
       await mockUserService.updateUserLocale({ locale: locale.tag });
       return { updateUserLocale: true };
+    }
+    case 'GetUserLocale': {
+      const data = await mockUserService.getUserAdditionalInfo();
+      return {
+        me: {
+          locale: data.locale ? { tag: String(data.locale), isManual: false } : null,
+        },
+      };
     }
     default:
       return null;

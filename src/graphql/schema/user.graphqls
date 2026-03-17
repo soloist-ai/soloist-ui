@@ -2,7 +2,7 @@ extend type Query {
     me: User!
     user(id: Long!): User!
     usersLeaderboard(paging: PagingInput!, filter: LeaderboardFilterInput!): UsersLeaderboardResult!
-    userLeaderboard(filter: LeaderboardFilterInput!): LeaderboardUser!
+    userLeaderboard(filter: LeaderboardFilterInput!): LeaderboardUser
 }
 
 extend type Mutation {
@@ -67,5 +67,4 @@ enum UserRole {
 enum LeaderboardType {
     TASKS
     BALANCE
-    LEVEL
 }

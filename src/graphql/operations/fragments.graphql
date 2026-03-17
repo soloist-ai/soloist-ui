@@ -1,10 +1,14 @@
-fragment LevelFields on Level {
+fragment TaskFields on Task {
   id
-  level
-  totalExperience
-  currentExperience
-  experienceToNextLevel
-  assessment
+  type
+  name
+  goal
+  progress
+  gemReward
+  isCompleted
+  proofType
+  day
+  createdAt
 }
 
 fragment MoneyFields on Money {
@@ -28,49 +32,6 @@ fragment DayStreakFields on DayStreak {
   current
   max
   isExtendedToday
-}
-
-fragment TaskFields on Task {
-  id
-  title
-  description
-  experience
-  currencyReward
-  rarity
-  topics
-  agility
-  strength
-  intelligence
-}
-
-fragment PlayerTaskFields on PlayerTask {
-  id
-  createdAt
-  updatedAt
-  order
-  status
-  task {
-    ...TaskFields
-  }
-}
-
-fragment PlayerDailyTaskFields on PlayerDailyTask {
-  id
-  title
-  progress
-  goal
-  isCompleted
-}
-
-fragment PlayerTaskTopicFields on PlayerTaskTopic {
-  id
-  version
-  isActive
-  taskTopic
-  level {
-    ...LevelFields
-  }
-  isDisabled
 }
 
 fragment ResponsePagingFields on ResponsePaging {
@@ -124,30 +85,5 @@ fragment UserProfileFields on User {
   }
   player {
     id
-    agility
-    strength
-    intelligence
-    level {
-      ...LevelFields
-    }
-  }
-}
-
-fragment CompleteTaskPlayerFields on CompleteTaskPlayer {
-  id
-  agility
-  strength
-  intelligence
-  level {
-    ...LevelFields
-  }
-  balance {
-    id
-    amount {
-      ...MoneyFields
-    }
-  }
-  taskTopics {
-    ...PlayerTaskTopicFields
   }
 }

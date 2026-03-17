@@ -36,7 +36,5 @@ enum BalanceTransactionType {
 
 enum BalanceTransactionCause {
     TASK_COMPLETION
-    LEVEL_UP
     DAILY_CHECK_IN
-    ITEM_PURCHASE
 }
